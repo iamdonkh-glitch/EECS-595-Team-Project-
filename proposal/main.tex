@@ -1,0 +1,88 @@
+\documentclass[11pt]{article}
+
+% "review" gives the anonymous, line-numbered version required for the proposal.
+\usepackage[review]{acl}
+
+\usepackage{times}
+\usepackage{latexsym}
+\usepackage[T1]{fontenc}
+\usepackage[utf8]{inputenc}
+\usepackage{microtype}
+\usepackage{inconsolata}
+\usepackage{enumitem}
+\setlist{nosep,leftmargin=*}
+
+\title{Do Multimodal Reasoning Models Talk Themselves into Hallucination?\\
+Self-Induced Inertia in Multi-Object Recognition}
+
+\author{Anonymous}
+
+\begin{document}
+\maketitle
+
+\begin{abstract}
+When a vision-language model labels several objects in one image, its own earlier answers can pull later ones toward the same class. We ask whether RL-trained reasoning VLMs amplify or correct this self-induced inertia: we compare same-base model pairs with and without reasoning post-training on ROPE, measure which error types reasoning changes, and test whether GRPO with a per-object reward and an inertia penalty reduces inertia.
+\end{abstract}
+
+\section{Problem}
+
+ROPE~\citep{chen2024rope} asks a VLM to name five objects marked by numbered boxes in one image, choosing each label from a candidate list. On its Adversarial subset (four objects of class A followed by one of class B), LLaVA-7B recognizes the B object 23.4\% of the time when probed alone, 13.2\% when all five are probed together, and 0.0\% under teacher forcing, where the four preceding answers are replaced by the ground truth (unseen split). Since that context is \emph{correct}, the failure is not error propagation: correct prior answers alone push the model onto a textual shortcut. We call this \emph{self-induced inertia}.
+
+These results predate reasoning VLMs such as MiMo-VL-RL and Qwen3-VL-Thinking, which reason at length before answering. Reasoning could amplify inertia (``boxes 1--4 are chairs around the table, so box 5 is probably another chair'') or correct it (``box 5 is larger and flat; it is the table''). Evidence points both ways. Longer reasoning lowers attention to the image~\citep{liu2025morethinking,tian2026vapo}, and reasoning models rarely recover once an error enters the chain~\citep{zhu2026textualinertia}. Yet self-verification is a stated goal of reasoning training. Among the 78 papers citing ROPE (Semantic Scholar, Oct.~2026), we found none that evaluates reasoning models. We ask:
+
+\begin{enumerate}
+\item[\textbf{RQ1}] On ROPE, do reasoning versions hallucinate more or less than non-reasoning versions of the same base model, by class composition?
+\item[\textbf{RQ2}] On Adversarial items, how often is object 5 labeled A, how much of this is caused by the preceding answers, and does longer reasoning raise or lower it?
+\item[\textbf{RQ3}] Which errors does reasoning change: invented classes, classes borrowed from other objects in the image, or inertia?
+\item[\textbf{RQ4}] (stretch) Does GRPO with a per-object reward and an inertia penalty reduce inertia without hurting general reasoning?
+\end{enumerate}
+
+\section{Related Work}
+
+\paragraph{Object hallucination.} POPE~\citep{li2023pope} probes whether single objects exist. ROPE~\citep{chen2024rope} queries five objects with controlled class composition and found the textual shortcut above, on 2024 non-reasoning VLMs. DO-Bench~\citep{wang2026dobench} separates perception errors from text-prior errors, and MIOH~\citep{min2026mioh} studies objects across several images. We study several objects within one image, on reasoning models.
+
+\paragraph{Hallucination in reasoning VLMs.} RH-Bench~\citep{liu2025morethinking} finds that longer reasoning lowers visual attention and amplifies hallucination; \citet{tian2026vapo} find that RL reasoning harms basic perception; MM-THEBench~\citep{huang2026mmthebench} locates hallucinations inside reasoning traces. These report aggregate effects; we isolate one mechanism with controlled compositions and per-error-type metrics.
+
+\paragraph{Inertia and error propagation.} \citet{sanchezvillegas2026reasoning} show that reasoning VLMs follow misleading text cues placed beside the image. \citet{zhu2026textualinertia} inject errors into reasoning chains and find that models self-correct in under 10\% of cases, and MM-Snowball~\citep{jiang2026mmsnowball} shows early errors compounding across dialogue turns. All three study planted or erroneous context. In ROPE's Adversarial items the pull comes from the model's own \emph{correct} answers, so methods that detect and repair earlier errors do not apply.
+
+\paragraph{RL against hallucination.} GRPO~\citep{shao2024deepseekmath} scores each sample relative to its group. DEEPO~\citep{zhuang2026deepo} notes that uniformly wrong groups give no gradient on hard queries and adds expert prefixes. We address the same sparsity for multi-object outputs with partial credit, and target inertia directly in the reward.
+
+\section{Approach}
+
+\paragraph{Model pairs.} MiMo-VL-7B SFT vs.\ RL~\citep{mimovl2025}: the RL model adds one mixed on-policy RL stage to the SFT model, so their gap mostly reflects RL. Qwen3-VL-8B Instruct vs.\ Thinking~\citep{bai2025qwen3vl}: same base, with and without long reasoning. Together the pairs separate ``RL changed the weights'' from ``the model thinks longer.'' Optionally, one API model with adjustable reasoning effort.
+
+\paragraph{Probes.} (i)~\emph{Default}: all five objects in one turn. (ii)~\emph{Single-object}: one object per turn. (iii)~\emph{Teacher forcing}, following ROPE: the prompt states the true labels of objects 1--4 and asks only for object 5, so the model reasons with that context; the gap to (ii) measures inertia from correct context. (iv)~\emph{Counterfactual prefix} (new): objects 1--4 are given a wrong class C; if object 5 drifts to C, the model copies its context rather than the image. (v)~\emph{Budget sweep}: thinking capped at several token budgets.
+
+\paragraph{Metrics.} Per-object accuracy by subset and position, and three error types: \emph{invented} (a class absent from the image), \emph{borrowed} (the class of another object in the image), and \emph{inertia} (an Adversarial object 5 labeled A). We also measure think--answer consistency: whether the class the reasoning settles on matches the final answer.
+
+\paragraph{Fix (RQ4).} We train a 3B open VLM with GRPO on ROPE-style data under three rewards: all-or-nothing (1 only if all five labels are correct), per-object (fraction correct), and per-object minus 0.5 when an Adversarial B object is labeled A. All-or-nothing gives no signal when no sample is fully correct and punishes one error as hard as three; per-object credit alone can still give an inertia-only error a positive advantage, which the penalty removes. Rewards come from annotations, with no human or LLM judge. We check for regressions on MathVista~\citep{lu2024mathvista}.
+
+\section{Data}
+
+ROPE~\citep{chen2024rope} is our test set, built from MSCOCO panoptic~\citep{lin2014coco} and ADE20K~\citep{zhou2019ade20k} images. Its subsets are Homogeneous (AAAAA), Heterogeneous (ABCDE), Adversarial (AAAAB), and In-the-Wild (mixed); its Seen/Unseen splits follow the source train/val split (about 10k rows on HuggingFace). Scoring is automatic, and we build on the official ROPE evaluation code. For RQ4 we generate ROPE-style training items from COCO and ADE20K annotations, excluding every ROPE image. We estimate 60--100 single-GPU A40 hours in total.
+
+\section{Plan and Milestones}
+
+\begin{itemize}
+\item \textbf{Oct 27--Nov 2:} pilot MiMo-VL SFT vs.\ RL on 100 images per subset; confirm output parsing, the HuggingFace-to-Seen/Unseen split mapping, and a measurable gap.
+\item \textbf{Nov 3--15:} evaluation harness; Default and Single-object runs for both pairs on all subsets (RQ1).
+\item \textbf{Nov 16--29:} forcing probes, budget sweep, and error taxonomy (RQ2, RQ3); GRPO data and first training runs (RQ4).
+\item \textbf{Nov 30--Dec 6:} analysis and slides for the Dec 7/9 presentations.
+\item \textbf{Dec 7--16:} final runs, error analysis, and report.
+\end{itemize}
+
+\noindent RQ1--RQ3 are the core and stand alone if RQ4 slips; if the pilot shows no gap between versions, the budget sweep and forcing probes become the main axis.
+
+\section{Team and Division of Work}
+
+Four members, each owning one angle; all share analysis and writing.
+\begin{itemize}
+\item \textbf{M1:} evaluation harness; paired-model runs (RQ1).
+\item \textbf{M2:} budget sweep; think--answer consistency (RQ2).
+\item \textbf{M3:} error taxonomy; object size, salience, and frequency (RQ3).
+\item \textbf{M4:} forcing probes (RQ2); GRPO data, rewards, runs (RQ4).
+\end{itemize}
+
+\bibliography{references}
+
+\end{document}
