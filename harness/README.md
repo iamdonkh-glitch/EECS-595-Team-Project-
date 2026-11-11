@@ -223,7 +223,7 @@ Written new: the vLLM loader (`models.py`), think-tag stripping, the one-shot an
 - Default: a response that `segment_classes` cannot parse (no `", "`/`": "` structure, e.g. newline-separated or markdown) counts all five objects wrong. moh also adds 5 to `total_predictions` twice, so `moh_total = 10`. `analyze.py` reports both `strict` (correct / 5 per image) and `moh` (correct / moh's total).
 - Single: `response.lower() == gold`, with no stripping or parsing, so `dog.` or `Obj.1: dog` is wrong.
 - Teacher forcing (incremental): call k must return the full `obj1: ..., objk: ...` list; moh takes the k-th segment. A bare class answer fails to parse. At the first failure moh stops, objects k..5 count wrong, and `5-k+1` more is added to the total.
-- Oneshot / counterfactual: these have no moh counterpart. We apply moh's index-k rule (`segment_classes`, take segment k, where k is the asked object: 5, or 1 on BAAAA) and `moh_total = 1`.
+- Oneshot / counterfactual: these have no moh counterpart. We split with moh's `segment_classes` (a segment without `": "` fails the parse) and take the segment keyed `objK`, where K is the asked object (5, or 1 on BAAAA); `moh_total = 1`. The key, not the position, matters on BAAAA: the prefix lists obj2..obj5 before obj1, and an answer that follows that order has obj2's class in segment 1.
 - One deviation: we `.strip()` the answer after removing the think block. moh's HF handlers (Yi-VL, LLaVA-NeXT) also strip.
 
 The tolerant parser (`objK:` anywhere, markdown and case removed, mapped to the longest matching candidate; a bare class for single-object questions) is reported next to the strict one and never replaces it.

@@ -32,9 +32,11 @@ def strict_score(probe, answers, gold, tf_mode="oneshot", ask_index=5):
       * teacher forcing (incremental): the k-th call is parsed with segment_classes and its
         k-th segment is taken; at the first failure moh breaks, so objects k..5 count wrong
         and 5-k+1 extra is added to total_predictions.
-    One-shot teacher forcing and counterfactual have no moh counterpart: we apply moh's
-    index-k rule (segment_classes, take segment k, k = asked object: 5, or 1 on BAAAA) and
-    moh_total = 1."""
+    One-shot teacher forcing and counterfactual have no moh counterpart: we split with moh's
+    segment_classes (any segment without ": " fails the parse) and take the segment whose key
+    is obj{k}, k = the asked object (5, or 1 on BAAAA); moh_total = 1. Taking the segment by
+    its key rather than its position matters when the answer follows the prefix's order
+    (BAAAA lists obj2..obj5 before obj1; an assistant-turn prefill always does)."""
     if probe == "default":
         try:
             seg = segment_classes(answers[0])
@@ -59,14 +61,25 @@ def strict_score(probe, answers, gold, tf_mode="oneshot", ask_index=5):
                 total += 5 - index + 1
                 break
         return parsed, [p == g for p, g in zip(parsed, gold)], total
-    # one-shot teacher forcing / counterfactual: the asked object only
+    # one-shot teacher forcing / counterfactual: the asked object only, found by its key
     k = ask_index
-    try:
-        seg = segment_classes(answers[0])
-        p = seg[k - 1].lower() if len(seg) >= k else None
-    except Exception:
-        p = None
+    p = keyed_segment(answers[0], k)
     return [p], [p == gold[k - 1]], 1
+
+
+def keyed_segment(response, k):
+    """NEW. moh's split (segments on ", ", key and class on ": "; a segment without ": " fails
+    the whole parse, as in segment_classes), then the class of the first segment keyed obj{k}.
+    None when the parse fails or no segment is keyed obj{k}."""
+    try:
+        segment_classes(response)  # same failure condition as moh
+    except Exception:
+        return None
+    for segment in response.split(", "):
+        key, cls = segment.split(": ")[0], segment.split(": ")[1]
+        if key.strip().lower() == f"obj{k}":
+            return cls.lower()
+    return None
 
 
 # ---------------------------------------------------------------- tolerant (new)

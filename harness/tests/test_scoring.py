@@ -102,6 +102,17 @@ def test_oneshot_and_counterfactual_strict(entries):
     assert strict_score("counterfactual", [g[4]], g) == ([None], [False], 1)  # bare answer fails strict
 
 
+def test_oneshot_strict_takes_asked_key_not_position():
+    gold = ["drawer", "door", "door", "door", "door"]  # BAAAA: B = obj1
+    prefix_order = "obj2: door, obj3: door, obj4: door, obj5: door, obj1: drawer"
+    assert strict_score("teacher_forcing", [prefix_order], gold, ask_index=1) == (["drawer"], [True], 1)
+    canonical = "obj1: drawer, obj2: door, obj3: door, obj4: door, obj5: door"
+    assert strict_score("counterfactual", [canonical], gold, ask_index=1) == (["drawer"], [True], 1)
+    assert strict_score("teacher_forcing", ["obj1: drawer"], gold, ask_index=1)[0] == ["drawer"]
+    assert strict_score("teacher_forcing", ["obj2: door, obj3: door"], gold, ask_index=1)[0] == [None]
+    assert strict_score("teacher_forcing", ["obj1: drawer, door"], gold, ask_index=1)[0] == [None]  # moh parse fails
+
+
 def test_tolerant_is_separate_and_lenient(entries):
     e = entries["mixed"][0]
     g, cands = gold_labels(e), candidates("validation", e["data_source"])
