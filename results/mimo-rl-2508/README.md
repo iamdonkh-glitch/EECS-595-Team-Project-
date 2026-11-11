@@ -23,6 +23,7 @@ The forcing-probe runs will be added here when they finish.
 | `rq1_mimo-rl-2508_adversarial_single_validation.jsonl` | single, Unseen, `AAAAB` `BAAAA` | 668 | 6.3 MB |
 | `rq1_table1.csv` | Table 1, one line per subset x probe x split | 24 | |
 | `rq1_fig1_position.png` | accuracy by box position (Figure 1) | | |
+| `rq1_parser_audit.jsonl` | hand check of 100 rows: key, verdict, note | 100 | |
 | `rq1_tables.md` | full output of `analysis/rq1_table.py` on these files: Table 1, paired tests, box positions, Seen vs Unseen | | |
 
 The file layout, subset names, row schema and paths are the same as in `results/qwen3vl-8b-instruct/`:
@@ -145,6 +146,23 @@ The comparison is paired by image and box: diff = default − single, in points.
 ## Seen vs Unseen
 
 Every cell is lower on Unseen, by 4.8 to 9.4 points under the tolerant parse (Holm p ≤ 0.03 for all eight rows; see section (d) of `rq1_tables.md`).
+
+## Parser audit
+
+We drew 100 rows of the eight RQ1 files and read every answer. The draw used seed 0 and took 5 rows from each probe x split x subset cell, so it covers 500 objects. `rq1_parser_audit.jsonl` has the verdict for each row.
+
+| check | rows | Wilson 95% |
+|---|---|---|
+| tolerant label differs from what the answer says | 0 / 100 (0 / 500 objects) | 0.0 to 3.7% (objects: 0.0 to 0.8%) |
+| the answer names a class outside the candidate list | 0 / 100 | 0.0 to 3.7% |
+| default: strict fails only because of the answer's format | 6 / 50 | 5.6 to 23.8% |
+| single: strict fails only because of the answer's format (calls answered `\boxed{class}`) | 33 / 50 (78 / 250 calls) | 52.2 to 77.6% (calls: 25.8 to 37.2%) |
+| default: the call hit the token limit (no answer) | 5 / 50 | |
+
+The six default format failures have two causes:
+
+- **`\boxed{...}` wrapper (4 rows).** The answer is wrapped in `\boxed{obj1: ..., obj5: ...}`. Strict keeps the closing brace on box 5 (`person}`), so only that box is lost.
+- **Explanation before the answer (2 rows).** The answer is a markdown explanation that ends in a boxed list. Strict reads nothing there.
 
 ## Notes for the team
 
