@@ -128,6 +128,8 @@ The other probes use the same script:
 --export=ALL,MODEL=$M,SPLIT=validation,PROBES=counterfactual,OUT=...      # AAAAB and BAAAA only
 --export=ALL,MODEL=$M,SPLIT=validation,EXTRA="--budget 512",OUT=...       # truncate-and-close at 512 thinking tokens
 --export=ALL,MODEL=$M,SPLIT=validation,EXTRA="--no-think",OUT=...         # MiMo 2508 only
+--export=ALL,MODEL=$M,SPLIT=validation,PROBES=teacher_forcing,SUBSETS="AAAAB BAAAA",EXTRA="--n-given 2",OUT=...           # dose-response
+--export=ALL,MODEL=$M,SPLIT=validation,PROBES=counterfactual,EXTRA="--prefix-place assistant",OUT=...                     # labels prefilled in the answer
 ```
 
 The probe settings are part of each row's key, so several settings can share one OUT file. By hand, inside a GPU job after `source env.sh`, the same run is `python -m rope_runner.run --model ... --probe ... --split ... --greedy --out ... --resume`, and `python -m rope_runner.analyze <file.jsonl>` prints the table.
@@ -157,10 +159,14 @@ All prompt text goes in the single user turn, image first, through the model's o
 | teacher_forcing, oneshot | 1 | moh prompt + ` obj1: g1, obj2: g2, obj3: g3, obj4: g4, obj5:` (= moh's k=5 call); on BAAAA: ` obj2: g2, obj3: g3, obj4: g4, obj5: g5, obj1:` | 5 (BAAAA: 1) |
 | counterfactual | 1 | the same, with the four given labels replaced by C | 5 (BAAAA: 1) |
 | `--no-think` (MiMo 2508) | as the probe | the probe's text + ` /no_think` | as the probe |
+| `--n-given M` (one-shot TF, counterfactual) | 1 | as the probe, but only the first M of the four other objects (box order) are given: AAAAB M=2 ` obj1: g1, obj2: g2, obj5:`; BAAAA M=2 ` obj2: g2, obj3: g3, obj1:`; M=0 asks B with no labels | B |
+| `--prefix-place assistant` (one-shot TF, counterfactual) | 1 (thinking models: 2 generation steps) | moh prompt only; the prefix (leading space dropped) is prefilled as the start of the model's answer | B |
 
 C is drawn per image from the split's 50-class list minus the image's `object_set`. The seed is `sha256(seed|split|subset/entry_idx/image_id)`, so the draw does not depend on run order (seed in `configs/probes.yaml`). The prefix goes in the user turn, as in moh. moh does not cover where a thinking model should get it.
 
 In AAAAB and BAAAA, B is the odd object (position 5 in AAAAB, position 1 in BAAAA) and A is the class of the other four. One-shot teacher forcing and counterfactual ask B.
+
+Assistant-turn prefill (`--prefix-place assistant`): for a model without thinking, the prompt is the rendered chat + the prefill and the model continues it. For a thinking model, step 1 generates on the plain prompt and stops at `</think>` (the same thinking as the default probe, which has not seen the labels); step 2 continues from `<thinking></think>\n\n<prefill>` for `answer_max_tokens`. If thinking does not close within `max_tokens`, there is no step 2 and the call counts wrong under the token-limit rule. `stripped_answer` is the prefill followed by the generated continuation, so it is scored like the user-turn probes; `raw_output` is the generated text (with the prefill between the two steps). Not combinable with `--budget`.
 
 Dry run of any probe on CPU (fake model, real data, 5 images):
 
@@ -179,7 +185,8 @@ Per-call fields are lists, one element per model call (1 or 5). Per-object field
 | `image_id`, `entry_idx`, `image_path` | PNG stem, position in the JSON file, the bbox PNG the model saw |
 | `subset`, `split`, `probe`, `tf_mode`, `no_think`, `budget`, `variant` | run settings (`variant` = greedy/recommended, seed, tf mode, no_think, budget, prefix caching when set) |
 | `counterfactual_class` | C (counterfactual only) |
-| `prefix_used` | per call: text appended to the official prompt (`""` for default/single) |
+| `n_given`, `prefix_place` | `--n-given` (null = all four) and `--prefix-place` (`user` / `assistant`) |
+| `prefix_used` | per call: text appended to the official prompt (`""` for default/single); with `prefix_place = assistant`, the text prefilled in the answer |
 | `asked_objects` | per call: the object the call asks about (`null` = all five) |
 | `raw_output` | per call: full generated text (including the injected early-stop phrase when forced) |
 | `trace_text`, `stripped_answer` | per call: thinking part / text after the last `</think>` |
@@ -209,7 +216,7 @@ Copied verbatim:
 - `prompts.py`: the multi-object prompt string and the single-object f-string; the teacher-forcing cumulative-prompt loop (`TeacherForcingEvaluation.process_entry`), moved into a function.
 - `scoring.py`: `segment_classes` verbatim. The accounting of `MultiObjectEvaluation`, `SingleObjectEvaluation` and `TeacherForcingEvaluation.process_entry` is re-expressed per row. `tests/test_scoring.py` runs moh's own classes on the same responses and checks that `correct_predictions`, `total_predictions` and `acc_list` match exactly.
 
-Written new: the vLLM loader (`models.py`), think-tag stripping, the one-shot and counterfactual prefixes, the `/no_think` suffix, truncate-and-close (`budget.py`), the tolerant parser, error typing, JSONL output, checkpoint/resume (`run.py`), `analyze.py`, and the CPU fake model.
+Written new: the vLLM loader (`models.py`), think-tag stripping, the one-shot and counterfactual prefixes, `--n-given` and `--prefix-place assistant` (`budget.run_prefilled`), the `/no_think` suffix, truncate-and-close (`budget.py`), the tolerant parser, error typing, JSONL output, checkpoint/resume (`run.py`), `analyze.py`, and the CPU fake model.
 
 ## moh scoring quirks we keep (strict = official)
 
@@ -234,5 +241,5 @@ The tolerant parser (`objK:` anywhere, markdown and case removed, mapped to the 
 - `thinking_tokens`/`answer_tokens` split the generated count by re-tokenizing the answer text, so they can be off by a token or two. They are exact only for forced rows.
 - Images go in at native resolution (no `max_pixels`). MiMo (28 px/token) and Qwen3-VL (32 px/token) therefore get different visual-token counts. `mm_processor_kwargs` can be set per model in `models.yaml`.
 - Data quirks: `validation/mixed` has two PNGs listed twice with different object lists (entries 184/1170 and 256/1171), and the drawn boxes can match only one of each pair. The key includes `entry_idx`, so both are run. The HF `train.zip` unpacks to `train/images/` while the JSONs say `train/image/`; `data.image_path` falls back to the plural folder.
-- No prefix placement after `</think>` (assistant turn), and no student forcing.
+- No student forcing. Assistant-turn placement exists only for one-shot TF and counterfactual (`--prefix-place assistant`), not for incremental TF.
 - `--limit` only takes the first N items per subset; there is no random or stratified subset.

@@ -15,7 +15,7 @@ import yaml
 
 from . import budget as budget_mod
 from .data import SUBSETS, candidates, gold_labels, image_path, iter_items, load_image
-from .prompts import PROBES, SINGLE_PROBES, TF_MODES, build_calls
+from .prompts import PLACES, PROBES, SINGLE_PROBES, TF_MODES, build_calls
 from .scoring import error_types, strict_score, tolerant_score
 
 HERE = os.path.dirname(os.path.abspath(__file__))
@@ -30,6 +30,10 @@ def variant(args):
         v.append("no_think")
     if args.budget:
         v.append(f"budget={args.budget}")
+    if args.n_given is not None:
+        v.append(f"given={args.n_given}")
+    if args.prefix_place != "user":
+        v.append(f"place={args.prefix_place}")
     if args.prefix_caching != "auto":
         v.append(f"pc={args.prefix_caching}")
     return ",".join(v)
@@ -105,10 +109,13 @@ def make_model(args, models_cfg):
 
 
 def fake_answer(probe, entry, call):
-    """--dry-run only: the gold answer in moh's format."""
+    """--dry-run only: the gold answer in moh's format (after an assistant-turn prefill: the
+    prefill followed by the asked object's gold class)."""
     g = gold_labels(entry)
     if probe in SINGLE_PROBES:
         return g[call["obj_index"] - 1]
+    if call.get("prefill") is not None:
+        return f"{call['prefill']} {g[call['obj_index'] - 1]}"
     return ", ".join(f"obj{i}: {c}" for i, c in enumerate(g, 1))
 
 
@@ -123,6 +130,12 @@ def main(argv=None):
     ap.add_argument("--budget", type=int, default=None, help="thinking budget N (truncate-and-close)")
     ap.add_argument("--tf-mode", choices=TF_MODES, default=None)
     ap.add_argument("--no-think", action="store_true", help="append /no_think (MiMo 2508)")
+    ap.add_argument("--n-given", type=int, choices=range(5), default=None,
+                    help="one-shot teacher_forcing / counterfactual: give only the first N of the four "
+                         "other objects (dose-response); default all four")
+    ap.add_argument("--prefix-place", choices=PLACES, default="user",
+                    help="one-shot teacher_forcing / counterfactual: put the given labels in the user "
+                         "turn (moh, default) or prefill them as the start of the model's answer")
     ap.add_argument("--seed", type=int, default=0)
     ap.add_argument("--out", required=True)
     ap.add_argument("--resume", action="store_true")
@@ -141,6 +154,11 @@ def main(argv=None):
         args.tf_mode = probes_cfg.get("tf_mode", "oneshot")
     subsets = args.subset or probes_cfg.get("subsets", SUBSETS)
     cf_seed = probes_cfg.get("seed", 0)
+    one_shot = args.probe == "counterfactual" or (args.probe == "teacher_forcing" and args.tf_mode == "oneshot")
+    if (args.n_given is not None or args.prefix_place != "user") and not one_shot:
+        sys.exit("--n-given and --prefix-place apply to one-shot teacher_forcing and counterfactual only")
+    if args.prefix_place == "assistant" and args.budget:
+        sys.exit("--prefix-place assistant cannot be combined with --budget")
 
     if not args.dry_run and args.model not in models_cfg["models"]:
         sys.exit(f"unknown model {args.model}")
@@ -169,10 +187,11 @@ def main(argv=None):
     missing = []
     for start in range(0, len(todo), args.chunk):
         chunk = todo[start:start + args.chunk]
-        prompts, images, spans, per_item = [], [], [], []
+        prompts, images, spans, per_item, prefills = [], [], [], [], []
         for subset, idx, image_id, entry, key in chunk:
             calls, meta = build_calls(args.probe, entry, args.split, args.tf_mode, args.no_think,
-                                      image_key=f"{subset}/{idx}/{image_id}", seed=cf_seed, subset=subset)
+                                      image_key=f"{subset}/{idx}/{image_id}", seed=cf_seed, subset=subset,
+                                      n_given=args.n_given, place=args.prefix_place)
             path = image_path(args.data_dir, entry)
             if args.dry_run and not os.path.exists(path):
                 missing.append(path)
@@ -184,10 +203,15 @@ def main(argv=None):
                     model.answer_for[(p, img)] = fake_answer(args.probe, entry, c)
                 prompts.append(p)
                 images.append(img)
+                prefills.append(c.get("prefill"))
             spans.append((s, len(prompts)))
             per_item.append((subset, idx, image_id, entry, key, calls, meta, path))
         t0 = time.time()
-        gens = budget_mod.run_calls(model, prompts, images, max_tokens, args.budget, answer_max)
+        if args.prefix_place == "assistant":
+            thinking = getattr(model, "thinking", mcfg.get("thinking", False))
+            gens = budget_mod.run_prefilled(model, prompts, images, prefills, thinking, max_tokens, answer_max)
+        else:
+            gens = budget_mod.run_calls(model, prompts, images, max_tokens, args.budget, answer_max)
         chunk_wall = time.time() - t0
         ts = datetime.datetime.now().astimezone().isoformat(timespec="seconds")
         chunk_id = f"{ts}#{start}"
@@ -200,6 +224,7 @@ def main(argv=None):
                 "tf_mode": args.tf_mode if args.probe == "teacher_forcing" else None,
                 "no_think": args.no_think, "budget": args.budget, "variant": var,
                 "counterfactual_class": meta.get("counterfactual_class"),
+                "n_given": meta.get("n_given"), "prefix_place": args.prefix_place,
                 "prefix_used": [c["prefix"] for c in calls],
                 "raw_output": [x["raw_output"] for x in g],
                 "stripped_answer": [x["stripped_answer"] for x in g],

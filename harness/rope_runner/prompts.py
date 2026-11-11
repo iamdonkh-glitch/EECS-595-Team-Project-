@@ -73,15 +73,32 @@ def counterfactual_class(entry, split, image_key, seed=0):
     return random.Random(h).choice(pool).lower()
 
 
+PLACES = ["user", "assistant"]
+
+
 def build_calls(probe, entry, split, tf_mode="oneshot", no_think=False, image_key="", seed=0,
-                subset=None):
-    """Return (calls, meta). calls = list of dicts {text, prefix, obj_index}; obj_index is the
-    1-based object each call asks about (None = all five). For one-shot teacher_forcing and
-    counterfactual the asked object is B: object 5 on AAAAB (and non-adversarial subsets),
-    object 1 on BAAAA (the other four given)."""
+                subset=None, n_given=None, place="user"):
+    """Return (calls, meta). calls = list of dicts {text, prefix, obj_index, prefill}; obj_index
+    is the 1-based object each call asks about (None = all five). For one-shot teacher_forcing
+    and counterfactual the asked object is B: object 5 on AAAAB (and non-adversarial subsets),
+    object 1 on BAAAA (the other four given).
+
+    NEW (one-shot teacher_forcing and counterfactual only):
+      n_given  0-4: give only the first n_given of the four other objects (box order), then ask B.
+               None = all four (the default one-shot prompt).
+      place    "user" = prefix appended to the user turn (moh placement, default);
+               "assistant" = the user turn is the plain multi-object prompt and the prefix
+               (without its leading space) is the start of the model's own answer (`prefill`)."""
     src = entry["data_source"]
     gold = gold_labels(entry)
     meta = {}
+    one_shot = probe == "counterfactual" or (probe == "teacher_forcing" and tf_mode == "oneshot")
+    if (n_given is not None or place != "user") and not one_shot:
+        raise ValueError("n_given and place apply to one-shot teacher_forcing and counterfactual only")
+    if n_given is not None and not 0 <= n_given <= 4:
+        raise ValueError(f"n_given must be 0-4, got {n_given}")
+    if place not in PLACES:
+        raise ValueError(place)
     if probe == "default":
         calls = [{"text": multi_object_prompt(split, src), "prefix": "", "obj_index": None}]
     elif probe in SINGLE_PROBES:
@@ -105,8 +122,14 @@ def build_calls(probe, entry, split, tf_mode="oneshot", no_think=False, image_ke
             ask = b_index(subset)
             if probe == "teacher_forcing":
                 given = [g for k, g in enumerate(gold, 1) if k != ask]
-            pre = given_prefix(ask, given)  # ask=5: == moh's cumulative index-5 prompt
-            calls = [{"text": base + pre, "prefix": pre, "obj_index": ask}]
+            m = 4 if n_given is None else n_given
+            pre = given_prefix(ask, given[:m])  # ask=5, m=4: == moh's cumulative index-5 prompt
+            if n_given is not None:
+                meta["n_given"] = n_given
+            if place == "assistant":
+                calls = [{"text": base, "prefix": pre, "obj_index": ask, "prefill": pre.lstrip()}]
+            else:
+                calls = [{"text": base + pre, "prefix": pre, "obj_index": ask}]
     else:
         raise ValueError(f"unknown probe {probe}")
     if no_think:

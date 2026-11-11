@@ -53,6 +53,7 @@ class VLLMModel:
         self.name, self.cfg = name, model_cfg
         self.path = expand(model_cfg["path"])
         self.family = model_cfg["family"]
+        self.thinking = bool(model_cfg.get("thinking", False))
         self.processor = AutoProcessor.from_pretrained(self.path)
         kw = dict(
             model=self.path,
@@ -80,12 +81,16 @@ class VLLMModel:
     def count_tokens(self, text):
         return len(self.tokenizer.encode(text, add_special_tokens=False)) if text else 0
 
-    def generate(self, prompts, images, max_tokens):
+    def generate(self, prompts, images, max_tokens, stop=None):
         """Returns list of (text, n_generated_tokens, finish_reason, n_prompt_tokens,
         n_cached_prompt_tokens). Prompt tokens include the image placeholder tokens; cached =
-        vLLM's prefix-cache hits (None when vLLM does not report it)."""
+        vLLM's prefix-cache hits (None when vLLM does not report it).
+        stop: optional list of stop strings; the matched string is kept in the text (NEW, used
+        to end the thinking stage at </think> before an assistant-turn prefill)."""
         from vllm import SamplingParams
         s = {k: v for k, v in self.sampling.items() if k != "mode"}
+        if stop:
+            s.update(stop=list(stop), include_stop_str_in_output=True)
         sp = SamplingParams(max_tokens=max_tokens, skip_special_tokens=False, **s)
         reqs = [{"prompt": p, "multi_modal_data": {"image": im}} for p, im in zip(prompts, images)]
         outs = self.llm.generate(reqs, sp, use_tqdm=True)
@@ -100,6 +105,7 @@ class FakeModel:
     the "image" is the image path, so identical prompts for different images stay distinct."""
 
     family = "qwen3vl"
+    thinking = True  # always wraps its answer in <think>...</think>
 
     def __init__(self, name="fake", think_tokens=40, prefix_caching=None):
         self.name, self.path, self.think_tokens = name, "fake://", think_tokens
@@ -130,22 +136,29 @@ class FakeModel:
             best = max(best, n)
         return best
 
-    def generate(self, prompts, images, max_tokens):
-        out = [self._generate_one(p, im, max_tokens) for p, im in zip(prompts, images)]
+    def generate(self, prompts, images, max_tokens, stop=None):
+        out = [self._generate_one(p, im, max_tokens, stop) for p, im in zip(prompts, images)]
         earlier = []
         for i, (p, im) in enumerate(zip(prompts, images)):
             out[i] = out[i] + (self.count_tokens(p), self._cached(p, im, earlier))
             earlier.append((p, im))
         return out
 
-    def _generate_one(self, p, im, max_tokens):
-        if p.endswith("</think>\n\n"):  # continuation after a forced close
-            head = p.split("<|im_start|>assistant\n")[0] + "<|im_start|>assistant\n"
+    def _generate_one(self, p, im, max_tokens, stop=None):
+        head = p.split("<|im_start|>assistant\n")[0] + "<|im_start|>assistant\n"
+        tail = p[len(head):]
+        if tail:  # continuation: after a forced close, or after an assistant-turn prefill
             body = self.answer_for.get((head, im), "")
+            done = tail.rsplit("</think>", 1)[-1].lstrip("\n") if "</think>" in tail else tail
+            if done and body.startswith(done):
+                body = body[len(done):]
             return (body, self.count_tokens(body), "stop")
         ans = self.answer_for.get((p, im), "")
         think = " ".join(["hmm"] * self.think_tokens)
         full = f"<think>\n{think}\n</think>\n\n{ans}"
+        for s in stop or []:
+            if s in full:
+                full = full[:full.index(s) + len(s)]
         toks = full.split()
         if len(toks) > max_tokens:
             return (" ".join(toks[:max_tokens]), max_tokens, "length")

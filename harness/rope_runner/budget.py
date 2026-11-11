@@ -67,3 +67,64 @@ def run_calls(model, prompts, images, max_tokens, budget=None, answer_max_tokens
             "cached_tokens": sum(ct) if ct else None,
         })
     return rows
+
+
+def _drop_specials(text):
+    for s in ("<|im_end|>", "<|endoftext|>"):
+        text = text.replace(s, "")
+    return text
+
+
+def run_prefilled(model, prompts, images, prefills, thinking, max_tokens, answer_max_tokens=128):
+    """NEW. Assistant-turn prefill: the given labels are the start of the model's own answer.
+
+    Non-thinking model: one call on prompt + prefill.
+    Thinking model: (1) generate on the plain prompt, stopping at </think> (the same thinking as
+    the default probe); (2) if thinking closed, continue on prompt + thinking + "\\n\\n" + prefill
+    for `answer_max_tokens`. If thinking never closed within max_tokens there is no step 2: the
+    answer is "" and finish_reason is "length" (wrong under the token-limit rule).
+
+    stripped_answer = prefill + the generated continuation, so the answer is scored in the same
+    `obj1: c1, ...` format as the user-turn probes; raw_output holds only generated text."""
+    if not thinking:
+        rows = []
+        gens = model.generate([p + f for p, f in zip(prompts, prefills)], images, max_tokens)
+        for f, g in zip(prefills, gens):
+            t, n, fin = g[:3]
+            rows.append({
+                "raw_output": t, "trace_text": "", "stripped_answer": (f + _drop_specials(t)).strip(),
+                "think_closed": None, "forced_close": False, "thinking_tokens": 0, "answer_tokens": n,
+                "finish_reason": fin,
+                "prompt_tokens": g[3] if len(g) > 3 else None, "cached_tokens": g[4] if len(g) > 4 else None,
+            })
+        return rows
+
+    first = model.generate(prompts, images, max_tokens, stop=[THINK_CLOSE])
+    idx = [i for i, g in enumerate(first) if THINK_CLOSE in g[0]]
+    cont = [prompts[i] + first[i][0] + "\n\n" + prefills[i] for i in idx]
+    second = dict(zip(idx, model.generate(cont, [images[i] for i in idx], answer_max_tokens))) if idx else {}
+    rows = []
+    for i, g1 in enumerate(first):
+        t1, n1, f1 = g1[:3]
+        g2 = second.get(i)
+        pt = [x[3] for x in (g1, g2) if x and len(x) > 3 and x[3] is not None]
+        ct = [x[4] for x in (g1, g2) if x and len(x) > 4 and x[4] is not None]
+        if g2 is None:  # thinking never closed
+            trace = t1.split(THINK_OPEN, 1)[-1].replace(THINK_CLOSE, "").strip()
+            rows.append({"raw_output": t1, "trace_text": trace, "stripped_answer": "",
+                         "think_closed": False, "forced_close": False, "thinking_tokens": n1,
+                         "answer_tokens": 0, "finish_reason": f1,
+                         "prompt_tokens": sum(pt) if pt else None, "cached_tokens": sum(ct) if ct else None})
+            continue
+        t2, n2, f2 = g2[:3]
+        trace = t1.rsplit(THINK_CLOSE, 1)[0].split(THINK_OPEN, 1)[-1].strip()
+        # keep the continuation's leading space: "obj5:" + " dog" must stay "obj5: dog"
+        cont_text = _drop_specials(t2.rsplit(THINK_CLOSE, 1)[-1] if THINK_CLOSE in t2 else t2)
+        rows.append({
+            "raw_output": t1 + "\n\n" + prefills[i] + t2, "trace_text": trace,
+            "stripped_answer": (prefills[i] + cont_text).strip(),
+            "think_closed": True, "forced_close": False, "thinking_tokens": n1, "answer_tokens": n2,
+            "finish_reason": f2,
+            "prompt_tokens": sum(pt) if pt else None, "cached_tokens": sum(ct) if ct else None,
+        })
+    return rows
