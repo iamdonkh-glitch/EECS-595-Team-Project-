@@ -86,12 +86,17 @@ class VLLMModel:
         n_cached_prompt_tokens). Prompt tokens include the image placeholder tokens; cached =
         vLLM's prefix-cache hits (None when vLLM does not report it).
         stop: optional list of stop strings; the matched string is kept in the text (NEW, used
-        to end the thinking stage at </think> before an assistant-turn prefill)."""
+        to end the thinking stage at </think> before an assistant-turn prefill).
+        max_tokens: one cap for all prompts, or a list with one cap per prompt (NEW, used for the
+        answer stage after an assistant-turn prefill)."""
         from vllm import SamplingParams
         s = {k: v for k, v in self.sampling.items() if k != "mode"}
         if stop:
             s.update(stop=list(stop), include_stop_str_in_output=True)
-        sp = SamplingParams(max_tokens=max_tokens, skip_special_tokens=False, **s)
+        if isinstance(max_tokens, (list, tuple)):
+            sp = [SamplingParams(max_tokens=int(n), skip_special_tokens=False, **s) for n in max_tokens]
+        else:
+            sp = SamplingParams(max_tokens=max_tokens, skip_special_tokens=False, **s)
         reqs = [{"prompt": p, "multi_modal_data": {"image": im}} for p, im in zip(prompts, images)]
         outs = self.llm.generate(reqs, sp, use_tqdm=True)
         return [(o.outputs[0].text, len(o.outputs[0].token_ids), o.outputs[0].finish_reason,
@@ -137,7 +142,8 @@ class FakeModel:
         return best
 
     def generate(self, prompts, images, max_tokens, stop=None):
-        out = [self._generate_one(p, im, max_tokens, stop) for p, im in zip(prompts, images)]
+        caps = list(max_tokens) if isinstance(max_tokens, (list, tuple)) else [max_tokens] * len(prompts)
+        out = [self._generate_one(p, im, n, stop) for p, im, n in zip(prompts, images, caps)]
         earlier = []
         for i, (p, im) in enumerate(zip(prompts, images)):
             out[i] = out[i] + (self.count_tokens(p), self._cached(p, im, earlier))
@@ -152,6 +158,9 @@ class FakeModel:
             done = tail.rsplit("</think>", 1)[-1].lstrip("\n") if "</think>" in tail else tail
             if done and body.startswith(done):
                 body = body[len(done):]
+            if self.count_tokens(body) > max_tokens:  # keep the leading space: "obj5:" + " dog"
+                lead = body[:len(body) - len(body.lstrip())]
+                return (lead + " ".join(body.split()[:max_tokens]), max_tokens, "length")
             return (body, self.count_tokens(body), "stop")
         ans = self.answer_for.get((p, im), "")
         think = " ".join(["hmm"] * self.think_tokens)

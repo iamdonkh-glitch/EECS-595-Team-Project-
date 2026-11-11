@@ -23,6 +23,11 @@ percentile bootstraps over images (2,000 reps). Paired tests against default on 
 exact McNemar on B correct (and on B labelled A); Holm over all comparisons of one model, per outcome.
 Strict labels of one-shot TF and counterfactual rows are re-read from the answer with
 rope_runner.scoring.keyed_segment (the segment keyed objK), whatever scorer wrote the row.
+Assistant-turn prefill rows are read with rope_runner.scoring.prefill_labels: Table 4 uses the label
+written right after the prefill, and a row counts as cut only when thinking never closed (the model
+may keep writing after the label until the token limit; that later text is a re-check, not the label).
+A second table reports what follows the forced line: how often the model kept writing, and its final
+label for B.
 """
 import csv
 import glob
@@ -36,7 +41,8 @@ import numpy as np
 HERE = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, HERE)
 import rq1_table as rq1  # noqa: E402  (also puts harness/ on sys.path)
-from rope_runner.scoring import keyed_segment  # noqa: E402
+from rope_runner.data import candidates  # noqa: E402
+from rope_runner.scoring import keyed_segment, prefill_labels  # noqa: E402
 
 ORDERS = [("Adversarial", ("AAAAB", "BAAAA")), ("AAAAB", ("AAAAB",)), ("BAAAA", ("BAAAA",)),
           ("Homogeneous control", ("homogenous",))]
@@ -87,13 +93,23 @@ def b_record(r):
     gold = r["all_gold_labels"]
     a_cls = gold[1] if b == 1 else gold[0]
     cf = r.get("counterfactual_class")
-    strict = r["parsed_labels"][i]
+    tol, strict = r["tolerant_labels"][i], r["parsed_labels"][i]
     if len(objs) == 1:  # one-shot TF / counterfactual: read strict by key
         strict = keyed_segment(r["stripped_answer"][0], b)
-    rec = {"cut": cut}
-    for tag, lab in (("t", r["tolerant_labels"][i]), ("s", strict)):
-        rec[tag] = {"ok": 0, "A": 0, "C": 0} if cut else {
-            "ok": int(lab == gold[b - 1]), "A": int(lab == a_cls), "C": int(cf is not None and lab == cf)}
+    out = lambda lab: {"ok": int(lab == gold[b - 1]), "A": int(lab == a_cls), "C": int(cf is not None and lab == cf)}
+    rec = {}
+    if r.get("prefix_place", "user") == "assistant":
+        # the label written right after the prefill; cut only when thinking never closed
+        pl = prefill_labels(r["stripped_answer"][0], r["prefix_used"][0], b,
+                            candidates(r["split"], r["data_source"]), fr[0])
+        cut = pl is None
+        tol, strict = (pl["first_t"], pl["first_s"]) if pl else (None, None)
+        rec["more"] = int(bool(pl and pl["more"]))
+        rec["f"] = out(pl["final_t"] if pl else None)
+        rec["unresolved"] = int(bool(pl and pl["more"] and pl["final_t"] is None))
+    rec["cut"] = cut
+    for tag, lab in (("t", tol), ("s", strict)):
+        rec[tag] = {"ok": 0, "A": 0, "C": 0} if cut else out(lab)
     return rec
 
 
@@ -202,6 +218,47 @@ def print_table4(rows):
         print(f"| {r['model']} | {r['split']} | {r['order']} | {r['condition']} | {r['n_images']} | {r['n_cut']} | "
               f"{rq1.pct(r['ok_t'])} ({rq1.pct(r['ok_s'])}) {rq1.ci_s(r['ok_t_ci'])} | "
               f"{a_cell} | {c_cell} | {acc_d} | {acc_p} | {a_d} | {a_p} |")
+    print()
+
+
+def after_prefill(data):
+    """Assistant-turn prefill conditions: what the model does after writing the forced line."""
+    rows = []
+    for m in sorted({k[0] for k in data}):
+        for sp in rq1.SPLITS:
+            for oname, subs in ORDERS:
+                for cond in conditions_of(data, m):
+                    if not cond.endswith(", assistant"):
+                        continue
+                    recs = list(cell(data, m, cond, sp, subs).values())
+                    if not recs:
+                        continue
+                    row = dict(model=m, split=rq1.SPLIT_NAME[sp], order=oname, condition=cond, n_images=len(recs),
+                               n_cut=sum(r["cut"] for r in recs))
+                    for what in ("more", "unresolved"):
+                        row[what] = rate([{"x": {"v": r[what]}} for r in recs], "x", "v")
+                    for what in ("ok", "A", "C"):
+                        row[f"first_{what}"] = rate(recs, "t", what)
+                        row[f"final_{what}"] = rate(recs, "f", what)
+                    rows.append(row)
+    return rows
+
+
+def print_after_prefill(rows):
+    print("## Assistant-turn prefill: the forced line, then the model's own re-check (%)\n")
+    print("first = the label written right after the prefill (the one Table 4 uses); kept writing = the model "
+          "went on after it (typically \"Wait, no, that's wrong\" and a re-check); final = obj K's last "
+          "\"objK: <class>\" in the answer (= first when it stopped); unresolved = kept writing but gave no final "
+          "label for B, or hit the token limit. cut = thinking never closed. All over n img, tolerant.\n")
+    print("| model | split | order | condition | n img | cut | first: B acc | first: B=A | first: B=C | kept writing | "
+          "final: B acc | final: B=A | final: B=C | unresolved |")
+    print("|---|---|---|---|---|---|---|---|---|---|---|---|---|---|")
+    for r in rows:
+        cf = r["condition"].startswith("CF")
+        c = lambda k: rq1.pct(r[k][0])
+        print(f"| {r['model']} | {r['split']} | {r['order']} | {r['condition']} | {r['n_images']} | {r['n_cut']} | "
+              f"{c('first_ok')} | {c('first_A')} | {c('first_C') if cf else '-'} | {c('more')} | "
+              f"{c('final_ok')} | {c('final_A')} | {c('final_C') if cf else '-'} | {c('unresolved')} |")
     print()
 
 
@@ -318,6 +375,9 @@ def main(argv=None):
     rows = table4(data)
     print_table4(rows)
     write_csv(rows, os.path.join(out_dir, "forcing_table4.csv"))
+    ap = after_prefill(data)
+    if ap:
+        print_after_prefill(ap)
     series = dose(data)
     if series:
         print_dose(series)

@@ -126,6 +126,42 @@ def tolerant_one(text, k, cands):
     return to_candidate(text, cands) if text.strip() else None
 
 
+def prefill_labels(answer, prefill, k, cands, finish):
+    """NEW. Object k after an assistant-turn prefill that ends in "obj{k}:" (the asked object).
+    answer = the row's stripped answer (prefill + the model's continuation); finish = the answer
+    stage's finish_reason. Returns None when the answer does not start with the prefill (thinking
+    never closed, so there was no answer stage), else a dict:
+      first_s  the first segment of the continuation (up to the first ",", ";" or line break),
+               lowercased and trimmed: the strict reading (any extra text makes it off-list)
+      first_t  to_candidate(first segment): the tolerant reading
+      more     the model kept writing after that label (e.g. "Wait, no, that's wrong. ...")
+      final_t  obj{k}'s label at the end of the answer: first_t when more is False; else the last
+               "obj{k}: <class>" in the later text whose label is exactly a candidate after
+               normalize() (descriptions such as "obj5: the box on the right is a drawer" are
+               skipped); None when there is no such mention or the answer hit the token limit."""
+    p = prefill.strip()
+    if not answer.startswith(p):
+        return None
+    head = answer[len(p):].lstrip(" ")
+    seg = re.split(r"[,;\n]", head, maxsplit=1)[0]
+    later = head[len(seg):]
+    more = bool(later.strip(" .,;\n"))
+    first_s = seg.strip().lower() or None
+    first_t = to_candidate(seg, cands) if seg.strip() else None
+    if not more:
+        return dict(first_s=first_s, first_t=first_t, more=False, final_t=first_t)
+    low = {c.lower() for c in cands}
+    final = None
+    ms = list(_OBJ.finditer(later))
+    for m, nxt in zip(ms, ms[1:] + [None]):
+        if int(m.group(1)) != k:
+            continue
+        chunk = re.split(r"[\n,;]", later[m.end(): nxt.start() if nxt else len(later)].strip(), maxsplit=1)[0]
+        if normalize(chunk) in low:
+            final = normalize(chunk)
+    return dict(first_s=first_s, first_t=first_t, more=True, final_t=None if finish == "length" else final)
+
+
 def tolerant_score(probe, answers, gold, cands, tf_mode="oneshot", ask_index=5):
     if probe == "default":
         found = tolerant_multi(answers[0], cands)

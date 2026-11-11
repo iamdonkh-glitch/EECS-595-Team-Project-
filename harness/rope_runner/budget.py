@@ -81,8 +81,12 @@ def run_prefilled(model, prompts, images, prefills, thinking, max_tokens, answer
     Non-thinking model: one call on prompt + prefill.
     Thinking model: (1) generate on the plain prompt, stopping at </think> (the same thinking as
     the default probe); (2) if thinking closed, continue on prompt + thinking + "\\n\\n" + prefill
-    for `answer_max_tokens`. If thinking never closed within max_tokens there is no step 2: the
-    answer is "" and finish_reason is "length" (wrong under the token-limit rule).
+    with what is left of the call's budget, max_tokens - thinking tokens (at least
+    `answer_max_tokens`), so the call gets the same total as a default call. The budget matters:
+    MiMo-VL-RL often writes the forced label, then "Wait, no, that's wrong" and re-checks the
+    image in the answer; a 128-token answer cut that re-check short. If thinking never closed
+    within max_tokens there is no step 2: the answer is "" and finish_reason is "length" (wrong
+    under the token-limit rule).
 
     stripped_answer = prefill + the generated continuation, so the answer is scored in the same
     `obj1: c1, ...` format as the user-turn probes; raw_output holds only generated text."""
@@ -102,7 +106,8 @@ def run_prefilled(model, prompts, images, prefills, thinking, max_tokens, answer
     first = model.generate(prompts, images, max_tokens, stop=[THINK_CLOSE])
     idx = [i for i, g in enumerate(first) if THINK_CLOSE in g[0]]
     cont = [prompts[i] + first[i][0] + "\n\n" + prefills[i] for i in idx]
-    second = dict(zip(idx, model.generate(cont, [images[i] for i in idx], answer_max_tokens))) if idx else {}
+    caps = [max(max_tokens - first[i][1], answer_max_tokens) for i in idx]
+    second = dict(zip(idx, model.generate(cont, [images[i] for i in idx], caps))) if idx else {}
     rows = []
     for i, g1 in enumerate(first):
         t1, n1, f1 = g1[:3]

@@ -8,7 +8,7 @@ from rope_runner.budget import run_prefilled
 from rope_runner.data import gold_labels
 from rope_runner.models import FakeModel
 from rope_runner.prompts import build_calls, multi_object_prompt
-from rope_runner.scoring import tolerant_score
+from rope_runner.scoring import prefill_labels, tolerant_score
 from conftest import FIXTURE
 
 
@@ -52,13 +52,45 @@ def test_assistant_place_moves_prefix_out_of_user_turn(entries):
     assert nt["text"].endswith(" /no_think") and "obj5:" not in nt["text"][-20:]
 
 
-def _prefilled_case(think_tokens=10, thinking=True, max_tokens=1000):
+PRE5 = "obj1: door, obj2: door, obj3: door, obj4: door, obj5:"
+CANDS = ["door", "drawer", "cabinet", "price tag"]
+
+
+def _prefilled_case(think_tokens=10, thinking=True, max_tokens=1000, cont=" drawer"):
     m = FakeModel(think_tokens=think_tokens)
     m.thinking = thinking
     p = m.render("q")
-    prefill = "obj1: door, obj2: door, obj3: door, obj4: door, obj5:"
-    m.answer_for[(p, None)] = prefill + " drawer"
-    return run_prefilled(m, [p], [None], [prefill], thinking, max_tokens)[0]
+    m.answer_for[(p, None)] = PRE5 + cont
+    return run_prefilled(m, [p], [None], [PRE5], thinking, max_tokens)[0]
+
+
+def test_run_prefilled_answer_gets_the_rest_of_the_budget():
+    # the forced label, then a re-check longer than the old 128-token answer cap
+    cont = " door\n\nWait, no, that's wrong. " + " ".join(["look"] * 300) + "\nobj5: drawer"
+    r = _prefilled_case(cont=cont, max_tokens=1000)  # thinking = 12 tokens, 988 left
+    assert r["finish_reason"] == "stop" and r["stripped_answer"].endswith("obj5: drawer")
+    assert r["stripped_answer"].startswith(PRE5 + " door\n")
+    r = _prefilled_case(cont=cont, max_tokens=200)  # 188 left: cut inside the re-check
+    assert r["finish_reason"] == "length" and r["answer_tokens"] == 188
+    assert r["stripped_answer"].startswith(PRE5 + " door")
+    r = _prefilled_case(cont=cont, max_tokens=20)  # never fewer than answer_max_tokens (128)
+    assert r["answer_tokens"] == 128
+
+
+def test_prefill_labels():
+    assert prefill_labels(PRE5 + " drawer", PRE5, 5, CANDS, "stop") == dict(
+        first_s="drawer", first_t="drawer", more=False, final_t="drawer")
+    redo = (PRE5 + " door\n\nWait, no, that's wrong.\nobj5: the lower right box is a drawer\n\n"
+            "obj1: cabinet, obj2: drawer, obj3: door, obj4: cabinet, obj5: drawer")
+    r = prefill_labels(redo, PRE5, 5, CANDS, "stop")
+    assert (r["first_s"], r["first_t"], r["more"], r["final_t"]) == ("door", "door", True, "drawer")
+    assert prefill_labels(redo, PRE5, 5, CANDS, "length")["final_t"] is None  # re-check cut: no final
+    r = prefill_labels(PRE5 + " door → Wait no, let me look again", PRE5, 5, CANDS, "stop")
+    assert r["first_s"] == "door → wait no" and r["first_t"] == "door" and r["more"] and r["final_t"] is None
+    pre1 = "obj2: door, obj3: door, obj4: door, obj5: door, obj1:"  # BAAAA: B is obj1, asked last
+    r = prefill_labels(pre1 + " price tag.", " " + pre1, 1, CANDS, "stop")
+    assert (r["first_s"], r["first_t"], r["more"], r["final_t"]) == ("price tag.", "price tag", False, "price tag")
+    assert prefill_labels("", PRE5, 5, CANDS, "length") is None  # thinking never closed
 
 
 def test_run_prefilled_thinking():
