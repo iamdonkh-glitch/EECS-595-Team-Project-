@@ -77,10 +77,27 @@ def test_forcing_table(tmp_path, capsys):
     assert "| m | Unseen | BAAAA | TF one-shot | 1 | 0 |" in out
 
 
+def test_homogeneous_control(tmp_path):
+    def homog(probe, idx, label, tf_mode=None):
+        r = row(probe, "AAAAB", idx, label, tf_mode=tf_mode)
+        r.update(subset="homogenous", all_gold_labels=[A] * 5, key=r["key"].replace("AAAAB", "homogenous"))
+        return r
+    rows = [homog("default", 0, B), homog("default", 1, A), homog("teacher_forcing", 0, A, "oneshot"),
+            homog("teacher_forcing", 1, A, "oneshot"), row("default", "AAAAB", 0, A)]
+    p = tmp_path / "h.jsonl"
+    p.write_text("\n".join(json.dumps(r) for r in rows) + "\n")
+    t4 = {(r["order"], r["condition"]): r for r in ft.table4(ft.load([str(p)]))}
+    assert t4[(ft.CONTROL, "default")]["ok_t"] == 0.5 and t4[(ft.CONTROL, "TF one-shot")]["ok_t"] == 1
+    assert t4[(ft.CONTROL, "TF one-shot")]["vs_ok"]["c"] == 1 and "vs_A" not in t4[(ft.CONTROL, "TF one-shot")]
+    # no forcing run on homogenous -> no control rows
+    p.write_text("\n".join(json.dumps(r) for r in rows[:2] + rows[4:]) + "\n")
+    assert not [r for r in ft.table4(ft.load([str(p)])) if r["order"] == ft.CONTROL]
+
+
 def test_out_of_scope_rows_are_dropped():
     r = row("default", "AAAAB", 0, A)
     assert ft.condition(dict(r, budget=512)) is None
     assert ft.condition(dict(r, no_think=True)) is None
     assert ft.condition(dict(r, variant="recommended,seed=0")) is None
-    assert ft.b_record(dict(r, subset="mixed")) is None
+    assert ft.b_record(dict(r, subset="mixed")) is None and ft.b_record(dict(r, subset="heterogenous")) is None
     assert ft.condition(row("counterfactual", "BAAAA", 0, B, cf=C, n_given=2, place="assistant")) == "CF, given=2, assistant"

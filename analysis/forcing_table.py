@@ -8,6 +8,8 @@ split and order, B is compared under every condition on the same images:
                                     --prefix-place assistant variants of the one-shot probes
 Outcomes per B: correct; labelled A (inertia: the class of the other four objects); labelled C
 (counterfactual: the injected class). Rows with --budget, --no-think or non-greedy decoding are left out.
+Homogeneous control: when a forcing run on `homogenous` exists, box 5 (the object the one-shot probes
+ask) is compared the same way; there all five objects share one class, so following the labels is right.
 
   source harness/env.sh
   python analysis/forcing_table.py [--out-dir DIR] [jsonl ...] > table4.md
@@ -36,7 +38,11 @@ sys.path.insert(0, HERE)
 import rq1_table as rq1  # noqa: E402  (also puts harness/ on sys.path)
 from rope_runner.scoring import keyed_segment  # noqa: E402
 
-ORDERS = [("Adversarial", ("AAAAB", "BAAAA")), ("AAAAB", ("AAAAB",)), ("BAAAA", ("BAAAA",))]
+ORDERS = [("Adversarial", ("AAAAB", "BAAAA")), ("AAAAB", ("AAAAB",)), ("BAAAA", ("BAAAA",)),
+          ("Homogeneous control", ("homogenous",))]
+# Homogeneous control: all five objects share one class, so following the given labels is correct.
+# The one-shot probes ask box 5 there; its rows appear only when a forcing run on homogenous exists.
+CONTROL = "Homogeneous control"
 BASE = ["single", "default", "TF incremental", "TF one-shot", "CF"]
 
 
@@ -65,9 +71,10 @@ def condition(r):
 
 
 def b_record(r):
-    """Outcomes for B in one row: {t,s: {ok, A, C}, cut}. None if the row does not score B."""
+    """Outcomes for B in one row: {t,s: {ok, A, C}, cut}. None if the row does not score B.
+    On homogenous (the control) "B" is box 5, the object the one-shot probes ask."""
     sub = r["subset"]
-    if sub not in ("AAAAB", "BAAAA"):
+    if sub not in ("AAAAB", "BAAAA", "homogenous"):
         return None
     b = 1 if sub == "BAAAA" else 5
     objs = r["obj_indices"]
@@ -141,6 +148,9 @@ def table4(data):
     for m in sorted({k[0] for k in data}):
         for sp in rq1.SPLITS:
             for oname, subs in ORDERS:
+                if oname == CONTROL and not any(cell(data, m, c, sp, subs) for c in conditions_of(data, m)
+                                                if c not in ("default", "single")):
+                    continue
                 base = cell(data, m, "default", sp, subs)
                 for cond in conditions_of(data, m):
                     g = cell(data, m, cond, sp, subs)
@@ -154,8 +164,9 @@ def table4(data):
                             row[f"{what}_{tag}"], row[f"{what}_{tag}_ci"] = rate(recs, tag, what)
                     if cond != "default" and base:
                         row["vs_ok"] = paired(base, g, "t", "ok")
-                        row["vs_A"] = paired(base, g, "t", "A")
                         row["vs_ok_s"] = paired(base, g, "s", "ok")
+                        if oname != CONTROL:
+                            row["vs_A"] = paired(base, g, "t", "A")
                     rows.append(row)
     # Holm: per model, over its comparisons with default, per outcome
     for m in {r["model"] for r in rows}:
@@ -185,10 +196,12 @@ def print_table4(rows):
         acc_d, acc_p = cmp_s(r.get("vs_ok"))
         a_d, a_p = cmp_s(r.get("vs_A"))
         c_cell = f"{rq1.pct(r['C_t'])} ({rq1.pct(r['C_s'])})" if r["condition"].startswith("CF") else "-"
+        a_cell = f"{rq1.pct(r['A_t'])} ({rq1.pct(r['A_s'])}) {rq1.ci_s(r['A_t_ci'])}"
+        if r["order"] == CONTROL:  # B = A there: inertia is not defined
+            a_cell, a_d, a_p = "-", "-", "-"
         print(f"| {r['model']} | {r['split']} | {r['order']} | {r['condition']} | {r['n_images']} | {r['n_cut']} | "
               f"{rq1.pct(r['ok_t'])} ({rq1.pct(r['ok_s'])}) {rq1.ci_s(r['ok_t_ci'])} | "
-              f"{rq1.pct(r['A_t'])} ({rq1.pct(r['A_s'])}) {rq1.ci_s(r['A_t_ci'])} | {c_cell} | "
-              f"{acc_d} | {acc_p} | {a_d} | {a_p} |")
+              f"{a_cell} | {c_cell} | {acc_d} | {acc_p} | {a_d} | {a_p} |")
     print()
 
 
