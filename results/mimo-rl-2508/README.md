@@ -2,12 +2,13 @@
 
 Xingjian Liu's runs of MiMo-VL-7B-RL-2508 (`mimo-rl-2508`). This folder holds result data only. The code is the team harness on `main` at `52429fe`.
 
-This folder has two runs:
+This folder has three runs:
 
 - The finished RQ1 run on all 5,163 ROPE items, with both probes: `default` (all five boxes in one answer) and `single` (one box per call). Decoding is greedy. Split `train` is Seen and `validation` is Unseen.
+- The core RQ2 forcing runs on Adversarial (`AAAAB`, `BAAAA`): one-shot teacher forcing, moh's incremental teacher forcing, and the counterfactual prefix (section "RQ2 forcing probes").
 - A smoke run on part of Unseen, made before the full run (last section).
 
-The forcing-probe runs will be added here when they finish.
+The finer forcing runs (labels given 0–3, assistant-turn prefill, Homogeneous control) are still queued and will be added when they finish.
 
 ## Files of the RQ1 run
 
@@ -181,6 +182,126 @@ The six default format failures have two causes:
    - Seen shows the same pattern with smaller gaps: AAAAB 56.5 vs 63.7, BAAAA 51.8 vs 58.9.
    - The drop under default also appears in BAAAA, where B is the first box the model labels.
    - These position numbers are descriptive and not tested here. The forcing probes (Table 4) pair them.
+
+## RQ2 forcing probes
+
+### Files
+
+| file | contents | rows | calls | at the limit | size |
+|---|---|---|---|---|---|
+| `forcing_mimo-rl-2508_tf-oneshot_train.jsonl` | one-shot teacher forcing, Seen, `AAAAB` `BAAAA` | 336 | 336 | 8 (2.4%) | 2.6 MB |
+| `forcing_mimo-rl-2508_tf-oneshot_validation.jsonl` | one-shot teacher forcing, Unseen | 668 | 668 | 30 (4.5%) | 6.8 MB |
+| `forcing_mimo-rl-2508_tf-incremental_train.jsonl` | incremental teacher forcing (moh), Seen | 336 | 1,680 | 74 (4.4%) | 15.1 MB |
+| `forcing_mimo-rl-2508_tf-incremental_validation.jsonl` | incremental teacher forcing (moh), Unseen | 668 | 3,340 | 244 (7.3%) | 40.7 MB |
+| `forcing_mimo-rl-2508_cf_train.jsonl` | counterfactual prefix, Seen | 336 | 336 | 18 (5.4%) | 3.5 MB |
+| `forcing_mimo-rl-2508_cf_validation.jsonl` | counterfactual prefix, Unseen | 668 | 668 | 50 (7.5%) | 8.4 MB |
+| `forcing_table4.csv` | Table 4 with CIs, p-values and the uncut check, one line per model x split x order x condition | 30 | | | |
+| `forcing_tables.md` | full output of `analysis/forcing_table.py` on these files and the Adversarial RQ1 files | | | | |
+| `forcing_parser_audit.jsonl` | hand check of 48 rows: key, verdict, note | 48 | | | |
+
+Every row asks about the odd object B (box 5 in `AAAAB`, box 1 in `BAAAA`). Each probe puts labels for the other four boxes in the user turn, then asks for B:
+
+- **TF one-shot.** The four true labels (all A) are given, and the model is asked for B in one call. In `BAAAA` the prompt lists `obj2`–`obj5` first and asks `obj1:` last, so B is asked last in both orders.
+- **TF incremental.** This is moh's official teacher forcing. Call k gives the true labels of boxes 1..k−1 and asks box k (5 calls per image). In `BAAAA`, B is box 1, so it is asked in call 1 with nothing given. That makes `BAAAA` incremental a no-forcing control.
+- **CF (counterfactual).** The four other boxes are given a wrong class C instead of A. C is drawn per image with seed 0 from the split's candidate list, leaving out every class in the image's `object_set`.
+
+### How the forcing runs were made
+
+The settings are the same as for the RQ1 runs (A40, vLLM 0.11.0, revision `ec4ebdc…`, `max_tokens` 8192, greedy). The code is the team harness on `main` at `52429fe`.
+
+| job | probes | split | elapsed |
+|---|---|---|---|
+| 65894186 | TF one-shot + CF | Unseen | 1:15:49 |
+| 65894188 | TF incremental | Unseen | 2:28:30 |
+| 65894190 | TF one-shot + CF | Seen | 0:35:55 |
+| 65894192 | TF incremental | Seen | 0:52:40 |
+
+Each run finished within its first job. The standby jobs 65894187, 65894189, 65894191 and 65894193 found nothing left and exited within 8 s. The runner wrote one file per split for TF one-shot + CF and one for incremental. The six files here are those files split by probe, so each stays under GitHub's 50 MB warning.
+
+```bash
+sbatch -A "$CSE595_ACCOUNT" -o "$CSE595_LOGS/%x-%j.out" -e "$CSE595_LOGS/%x-%j.err" \
+  --export=ALL,MODEL=mimo-rl-2508,SPLIT=validation,PROBES="teacher_forcing counterfactual",SUBSETS="AAAAB BAAAA",EXTRA="--chunk 128",OUT=$CSE595_RUNS/forcing_mimo-rl-2508_validation.jsonl \
+  harness/scripts/run.sbatch
+# incremental: PROBES=teacher_forcing, EXTRA="--chunk 128 --tf-mode incremental"
+```
+
+**Integrity.** Each probe has exactly one row per ROPE entry in each subset: 168 + 168 Seen, 334 + 334 Unseen. There are no duplicate keys and no broken lines.
+
+### Scoring
+
+Table 4 comes from `analysis/forcing_table.py`. The script is on Xingjian's branch `xingjian/forcing-probes` (commit `bb66828`); it will be on GitHub once that branch is pushed. It reads these files and the two `rq1_mimo-rl-2508_adversarial_*` files:
+
+```bash
+python analysis/forcing_table.py --out-dir results/mimo-rl-2508 \
+  results/mimo-rl-2508/rq1_mimo-rl-2508_adversarial_*.jsonl results/mimo-rl-2508/forcing_mimo-rl-2508_*.jsonl
+```
+
+- **Outcomes per B.** Each B is scored three ways: named correctly; labelled A (inertia: the class of the other four); and, for CF, labelled C.
+- **Parsers.** The tolerant parse gives the main number. For one-shot rows, the script re-reads strict from the answer by the key `objK`, whatever scorer wrote the row. `main`'s scorer reads by position, which is wrong for `BAAAA`.
+- **Tests.** Every condition is compared with `default` on the same images: exact McNemar, then Holm over all of the model's comparisons. CIs are bootstraps over images.
+- **Token limit.** A call for B that hits the limit makes B wrong and never A, as in RQ1.
+- **Uncut check.** `default` is usually cut more often than the forcing probes (57 vs 30 of 668 Unseen images for TF one-shot), and that alone would raise B=A. So every comparison is repeated on the images where neither call for B was cut.
+
+### Table 4 (MiMo-VL-7B-RL-2508): the odd object B (%, tolerant)
+
+"vs default" is the paired difference in B=A in points, with the Holm-corrected p in parentheses. "all" uses every image; "uncut" uses only images where neither call for B hit the limit. The pooled Adversarial rows, strict numbers, CIs and the accuracy comparisons are in `forcing_tables.md`.
+
+| split | order | condition | n | cut | B acc | B=A | B=C | B=A vs default, all | B=A vs default, uncut |
+|---|---|---|---|---|---|---|---|---|---|
+| Unseen | AAAAB | default | 334 | 35 | 42.2 | 29.3 | | | |
+| Unseen | AAAAB | single | 334 | 9 | 57.2 | 18.9 | | −10.5 (2.2e-04) | −11.9 (7.6e-05) |
+| Unseen | AAAAB | TF one-shot | 334 | 16 | 37.4 | 42.5 | | **+13.2 (1.4e-06)** | **+11.4 (1.9e-04)** |
+| Unseen | AAAAB | TF incremental | 334 | 16 | 38.6 | 40.7 | | **+11.4 (5.9e-05)** | **+10.7 (6.9e-04)** |
+| Unseen | AAAAB | CF | 334 | 29 | 39.2 | 35.6 | 0.3 | +6.3 (0.039) | +6.0 (0.084) |
+| Unseen | BAAAA | default | 334 | 22 | 44.6 | 32.6 | | | |
+| Unseen | BAAAA | single | 334 | 5 | 54.2 | 24.0 | | −8.7 (0.0028) | −9.4 (0.0016) |
+| Unseen | BAAAA | TF one-shot | 334 | 14 | 42.8 | 35.3 | | +2.7 (1) | +2.0 (1) |
+| Unseen | BAAAA | TF incremental (B asked first) | 334 | 35 | 41.9 | 33.2 | | +0.6 (1) | +1.4 (1) |
+| Unseen | BAAAA | CF | 334 | 21 | 42.5 | 35.3 | 0.6 | +2.7 (1) | +3.0 (1) |
+| Seen | AAAAB | default | 168 | 9 | 56.5 | 20.8 | | | |
+| Seen | AAAAB | single | 168 | 1 | 63.7 | 12.5 | | −8.3 (0.039) | −8.9 (0.021) |
+| Seen | AAAAB | TF one-shot | 168 | 5 | 50.6 | 28.6 | | +7.7 (0.24) | +8.4 (0.23) |
+| Seen | AAAAB | TF incremental | 168 | 4 | 51.2 | 28.6 | | +7.7 (0.21) | +7.6 (0.29) |
+| Seen | AAAAB | CF | 168 | 9 | 50.0 | 23.8 | 1.2 | +3.0 (1) | +3.2 (1) |
+| Seen | BAAAA | default | 168 | 12 | 51.8 | 17.9 | | | |
+| Seen | BAAAA | single | 168 | 2 | 58.9 | 16.1 | | −1.8 (1) | −3.8 (1) |
+| Seen | BAAAA | TF one-shot | 168 | 3 | 54.8 | 21.4 | | +3.6 (1) | +2.6 (1) |
+| Seen | BAAAA | TF incremental (B asked first) | 168 | 9 | 53.0 | 20.8 | | +3.0 (1) | +1.3 (1) |
+| Seen | BAAAA | CF | 168 | 9 | 51.2 | 22.6 | 0.6 | +4.8 (0.46) | +4.0 (0.56) |
+
+Pooled over both orders on Unseen (uncut), B=A rises by +6.6 under TF one-shot (Holm p 8.6e-04), +6.0 under TF incremental (0.0028) and +4.5 under CF (0.038). B accuracy falls by 4.9 under TF one-shot (0.024).
+
+### What the model writes after the given labels
+
+The model rewrites the whole list. In 99.7–100% of answered rows it gives all five labels `obj1`–`obj5`, not only B. It treats the given labels as follows:
+
+| probe | split | keeps the given labels on all four other boxes | labels those four boxes A |
+|---|---|---|---|
+| TF one-shot (given = A) | Seen / Unseen | 87.2% / 77.0% | 87.2% / 77.0% |
+| CF (given = C) | Seen / Unseen | 0.9% / 0.0% | 74.1% / 64.1% |
+
+Under CF it almost never keeps C: C appears on any of the four boxes in only 5 of 320 Seen and 9 of 618 Unseen answered rows. Instead it relabels them, mostly as A.
+
+### Parser audit
+
+48 rows were read by hand: 4 per probe x split x order, drawn with `random.seed(0)`. In all 48 rows, the tolerant label for B equals what the answer gives for B. The one cut row (thinking never closed) is empty under both parsers.
+
+Strict differs from tolerant in 11 rows:
+
+- In 6 rows the answer explains first and ends with `\boxed{obj1: ..., obj5: ...}`, and strict reads nothing.
+- In 3 rows the whole answer is wrapped in `\boxed{...}`.
+- In 2 rows the list is clean, but moh's incremental scorer had stopped at an earlier call, so it scores B wrong.
+
+The CF answers in the sample all replace C.
+
+### Notes for the team
+
+1. **Forcing the four A labels pulls B toward A when B is box 5.** On Unseen AAAAB, TF one-shot raises B=A from 29.3% to 42.5% (+13.2, Holm p 1.4e-06), and the rise stays at +11.4 on uncut images. Incremental TF gives about the same (+11.4). Seen goes the same way (+7.7 to +8.4) but is not significant after Holm with 168 images.
+2. **The pull is weak when B is box 1.** In `BAAAA`, one-shot TF lists the four A labels before asking B, just as in `AAAAB`, yet B=A rises only 2–4 points (not significant). Box order matters, not only the order of labels in the text. `BAAAA` incremental asks B first with nothing given; as a control should, it shows no significant change (+0.6 to +3.0).
+3. **The model rejects the counterfactual class but still drifts to A.** B=C is 0.3–1.2%, and the model rewrites the given boxes, mostly as A. B=A still rises under CF (Unseen pooled +4.5 uncut, Holm p 0.038). This fits B being pulled by the model's own relabelling of the other four boxes, which is the self-induced part of RQ2. But CF also changes the question (B is asked after four given labels), so this run alone does not separate the two.
+4. **Single stays far ahead of every forcing condition on B.** Forcing lowers pooled B accuracy against default by 1.5–5 points. The default−single gap from RQ1 stays.
+5. **Strict is unreliable here, as in RQ1.** Most strict failures are the `\boxed{}` habit or moh's incremental early stop, so read strict as a format measure.
+6. **Assistant-turn prefill changed after a test.** In an 8-image test, the model wrote the forced label right after the prefill. It then often wrote "Wait, no, that's wrong" and re-checked the image. The 128-token answer stage cut that re-check. The queued assistant-prefill runs now give the answer stage the rest of the 8,192-token budget (commit `25a0244` on `xingjian/forcing-probes`). Table 4 will score the label written right after the prefill, and a second table will report the final label after the re-check.
 
 ## Smoke run (before the full run)
 
