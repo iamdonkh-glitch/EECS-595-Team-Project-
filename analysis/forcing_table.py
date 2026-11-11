@@ -181,12 +181,17 @@ def table4(data):
                     if cond != "default" and base:
                         row["vs_ok"] = paired(base, g, "t", "ok")
                         row["vs_ok_s"] = paired(base, g, "s", "ok")
+                        # sensitivity: only images where neither call for B hit the token limit
+                        keep = [k for k in base if k in g and not base[k]["cut"] and not g[k]["cut"]]
+                        bu, gu = {k: base[k] for k in keep}, {k: g[k] for k in keep}
+                        row["vs_ok_uncut"] = paired(bu, gu, "t", "ok")
                         if oname != CONTROL:
                             row["vs_A"] = paired(base, g, "t", "A")
+                            row["vs_A_uncut"] = paired(bu, gu, "t", "A")
                     rows.append(row)
     # Holm: per model, over its comparisons with default, per outcome
     for m in {r["model"] for r in rows}:
-        for key in ("vs_ok", "vs_A", "vs_ok_s"):
+        for key in ("vs_ok", "vs_A", "vs_ok_s", "vs_ok_uncut", "vs_A_uncut"):
             rs = [r for r in rows if r["model"] == m and r.get(key)]
             for r, a in zip(rs, rq1.holm([r[key]["p"] for r in rs])):
                 r[key]["holm"] = a
@@ -218,6 +223,25 @@ def print_table4(rows):
         print(f"| {r['model']} | {r['split']} | {r['order']} | {r['condition']} | {r['n_images']} | {r['n_cut']} | "
               f"{rq1.pct(r['ok_t'])} ({rq1.pct(r['ok_s'])}) {rq1.ci_s(r['ok_t_ci'])} | "
               f"{a_cell} | {c_cell} | {acc_d} | {acc_p} | {a_d} | {a_p} |")
+    print()
+
+
+def print_uncut(rows):
+    """Sensitivity for Table 4: a cut call scores B wrong and never A, so a condition with fewer cuts
+    than default gains B=A from that alone. Here only images where neither call was cut count."""
+    rows = [r for r in rows if r.get("vs_ok_uncut")]
+    if not rows:
+        return
+    print("## Table 4, sensitivity: images where neither call for B hit the token limit\n")
+    print("Same comparisons with default as Table 4 (tolerant, y - x in points, exact McNemar, Holm over the "
+          "model's comparisons), on the images where neither the condition's nor default's call for B was cut.\n")
+    print("| model | split | order | condition | n img | acc vs default [CI] | p (Holm) | B=A vs default [CI] | p (Holm) |")
+    print("|---|---|---|---|---|---|---|---|---|")
+    for r in rows:
+        acc_d, acc_p = cmp_s(r["vs_ok_uncut"])
+        a_d, a_p = cmp_s(r.get("vs_A_uncut"))
+        print(f"| {r['model']} | {r['split']} | {r['order']} | {r['condition']} | {r['vs_ok_uncut']['n']} | "
+              f"{acc_d} | {acc_p} | {a_d} | {a_p} |")
     print()
 
 
@@ -268,7 +292,9 @@ def write_csv(rows, path):
         for what in ("ok", "A", "C"):
             cols += [f"{what}_{tag}", f"{what}_{tag}_lo", f"{what}_{tag}_hi"]
     cols += ["acc_vs_default", "acc_vs_default_lo", "acc_vs_default_hi", "acc_vs_default_p", "acc_vs_default_holm",
-             "A_vs_default", "A_vs_default_p", "A_vs_default_holm"]
+             "A_vs_default", "A_vs_default_p", "A_vs_default_holm",
+             "n_uncut", "acc_vs_default_uncut", "acc_vs_default_uncut_p", "acc_vs_default_uncut_holm",
+             "A_vs_default_uncut", "A_vs_default_uncut_p", "A_vs_default_uncut_holm"]
     with open(path, "w", newline="") as f:
         w = csv.writer(f)
         w.writerow(cols)
@@ -281,6 +307,11 @@ def write_csv(rows, path):
             d.update(acc_vs_default=v and v["diff"], acc_vs_default_lo=v and v["ci"][0], acc_vs_default_hi=v and v["ci"][1],
                      acc_vs_default_p=v and v["p"], acc_vs_default_holm=v and v["holm"],
                      A_vs_default=a and a["diff"], A_vs_default_p=a and a["p"], A_vs_default_holm=a and a["holm"])
+            vu, au = r.get("vs_ok_uncut"), r.get("vs_A_uncut")
+            d.update(n_uncut=vu and vu["n"], acc_vs_default_uncut=vu and vu["diff"],
+                     acc_vs_default_uncut_p=vu and vu["p"], acc_vs_default_uncut_holm=vu and vu["holm"],
+                     A_vs_default_uncut=au and au["diff"], A_vs_default_uncut_p=au and au["p"],
+                     A_vs_default_uncut_holm=au and au["holm"])
             w.writerow([round(d[c], 6) if isinstance(d[c], float) else ("" if d[c] is None else d[c]) for c in cols])
 
 
@@ -374,6 +405,7 @@ def main(argv=None):
     print(f"# RQ2 forcing probes\n\nFiles ({len(paths)}): " + ", ".join(os.path.basename(p) for p in paths) + "\n")
     rows = table4(data)
     print_table4(rows)
+    print_uncut(rows)
     write_csv(rows, os.path.join(out_dir, "forcing_table4.csv"))
     ap = after_prefill(data)
     if ap:

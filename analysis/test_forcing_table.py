@@ -76,6 +76,14 @@ def test_forcing_table(tmp_path, capsys):
     out = capsys.readouterr().out
     assert "| m | Unseen | BAAAA | TF one-shot | 1 | 0 |" in out
 
+    # sensitivity: img1 of "TF one-shot, given=0" is cut, so only img0 is compared there
+    g0 = t4[("AAAAB", "TF one-shot, given=0")]
+    assert g0["vs_ok"]["n"] == 2 and g0["vs_ok_uncut"]["n"] == 1 and g0["vs_A_uncut"]["n"] == 1
+    ft.print_uncut(ft.table4(data))
+    assert "| m | Unseen | AAAAB | TF one-shot, given=0 | 1 |" in capsys.readouterr().out
+    ft.write_csv(ft.table4(data), str(tmp_path / "t4.csv"))
+    assert "A_vs_default_uncut_holm" in (tmp_path / "t4.csv").read_text().splitlines()[0]
+
 
 def test_homogeneous_control(tmp_path):
     def homog(probe, idx, label, tf_mode=None):
