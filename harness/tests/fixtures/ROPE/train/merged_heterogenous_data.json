@@ -1,0 +1,323 @@
+[
+ {
+  "folder": "/train/images/heterogenous-images/bbox/ADE/ADE_train_00003926.png",
+  "filename": "ADE_train_00003926.jpg",
+  "source": {
+   "database": "Unknown",
+   "image_id": "None",
+   "coco_id": "None",
+   "flickr_id": "None"
+  },
+  "size": {
+   "width": "500",
+   "height": "375",
+   "depth": "3"
+  },
+  "segmented": "0",
+  "objects": [
+   {
+    "name": "picture",
+    "object_id": "8",
+    "difficult": "0",
+    "bndbox": {
+     "xmin": 244,
+     "ymin": 91,
+     "xmax": 327,
+     "ymax": 181
+    },
+    "bbox_number": 1
+   },
+   {
+    "name": "pillow",
+    "object_id": "11",
+    "difficult": "0",
+    "bndbox": {
+     "xmin": 261,
+     "ymin": 188,
+     "xmax": 333,
+     "ymax": 218
+    },
+    "bbox_number": 2
+   },
+   {
+    "name": "lamp",
+    "object_id": "9",
+    "difficult": "0",
+    "bndbox": {
+     "xmin": 411,
+     "ymin": 164,
+     "xmax": 477,
+     "ymax": 272
+    },
+    "bbox_number": 3
+   },
+   {
+    "name": "person",
+    "object_id": "4",
+    "difficult": "0",
+    "bndbox": {
+     "xmin": 2,
+     "ymin": 161,
+     "xmax": 57,
+     "ymax": 310
+    },
+    "bbox_number": 4
+   },
+   {
+    "name": "table",
+    "object_id": "19",
+    "difficult": "0",
+    "bndbox": {
+     "xmin": 93,
+     "ymin": 239,
+     "xmax": 175,
+     "ymax": 273
+    },
+    "bbox_number": 5
+   }
+  ],
+  "relations": [],
+  "object_set": [
+   "pillow",
+   "floor",
+   "flooring",
+   "cushion",
+   "ceiling",
+   "painting",
+   "picture",
+   "door frame",
+   "lamp",
+   "wall",
+   "light",
+   "light source",
+   "bed",
+   "person",
+   "individual",
+   "someone",
+   "somebody",
+   "mortal",
+   "soul",
+   "door",
+   "table"
+  ],
+  "data_source": "ADE"
+ },
+ {
+  "folder": "/train/images/heterogenous-images/bbox/ADE/ADE_train_00004109.png",
+  "filename": "ADE_train_00004109.jpg",
+  "source": {
+   "database": "Unknown",
+   "image_id": "None",
+   "coco_id": "None",
+   "flickr_id": "None"
+  },
+  "size": {
+   "width": "300",
+   "height": "240",
+   "depth": "3"
+  },
+  "segmented": "0",
+  "objects": [
+   {
+    "name": "lamp",
+    "object_id": "14",
+    "difficult": "0",
+    "bndbox": {
+     "xmin": 262,
+     "ymin": 72,
+     "xmax": 285,
+     "ymax": 105
+    },
+    "bbox_number": 1
+   },
+   {
+    "name": "pillow",
+    "object_id": "3",
+    "difficult": "0",
+    "bndbox": {
+     "xmin": 44,
+     "ymin": 106,
+     "xmax": 82,
+     "ymax": 153
+    },
+    "bbox_number": 2
+   },
+   {
+    "name": "curtain",
+    "object_id": "12",
+    "difficult": "0",
+    "bndbox": {
+     "xmin": 140,
+     "ymin": 10,
+     "xmax": 153,
+     "ymax": 119
+    },
+    "bbox_number": 3
+   },
+   {
+    "name": "table",
+    "object_id": "9",
+    "difficult": "0",
+    "bndbox": {
+     "xmin": 10,
+     "ymin": 173,
+     "xmax": 76,
+     "ymax": 240
+    },
+    "bbox_number": 4
+   },
+   {
+    "name": "cushion",
+    "object_id": "6",
+    "difficult": "0",
+    "bndbox": {
+     "xmin": 114,
+     "ymin": 110,
+     "xmax": 136,
+     "ymax": 145
+    },
+    "bbox_number": 5
+   }
+  ],
+  "relations": [],
+  "object_set": [
+   "pillow",
+   "mirror",
+   "cushion",
+   "chest of drawers",
+   "chest",
+   "bureau",
+   "dresser",
+   "painting",
+   "picture",
+   "lamp",
+   "wall",
+   "windowpane",
+   "window",
+   "bed",
+   "curtain",
+   "drape",
+   "drapery",
+   "mantle",
+   "pall",
+   "table"
+  ],
+  "data_source": "ADE"
+ },
+ {
+  "folder": "/train/images/heterogenous-images/bbox/ADE/ADE_train_00011365.png",
+  "filename": "ADE_train_00011365.jpg",
+  "source": {
+   "database": "Unknown",
+   "image_id": "None",
+   "coco_id": "None",
+   "flickr_id": "None"
+  },
+  "size": {
+   "width": "256",
+   "height": "256",
+   "depth": "3"
+  },
+  "segmented": "0",
+  "objects": [
+   {
+    "name": "bottle",
+    "object_id": "23",
+    "difficult": "0",
+    "bndbox": {
+     "xmin": 102,
+     "ymin": 1,
+     "xmax": 130,
+     "ymax": 26
+    },
+    "bbox_number": 1
+   },
+   {
+    "name": "drawer",
+    "object_id": "41",
+    "difficult": "0",
+    "bndbox": {
+     "xmin": 23,
+     "ymin": 28,
+     "xmax": 69,
+     "ymax": 43
+    },
+    "bbox_number": 2
+   },
+   {
+    "name": "book",
+    "object_id": "21",
+    "difficult": "0",
+    "bndbox": {
+     "xmin": 84,
+     "ymin": 43,
+     "xmax": 122,
+     "ymax": 62
+    },
+    "bbox_number": 3
+   },
+   {
+    "name": "cushion",
+    "object_id": "9",
+    "difficult": "0",
+    "bndbox": {
+     "xmin": 227,
+     "ymin": 49,
+     "xmax": 255,
+     "ymax": 95
+    },
+    "bbox_number": 4
+   },
+   {
+    "name": "arm",
+    "object_id": "30",
+    "difficult": "0",
+    "bndbox": {
+     "xmin": 104,
+     "ymin": 81,
+     "xmax": 145,
+     "ymax": 106
+    },
+    "bbox_number": 5
+   }
+  ],
+  "relations": [],
+  "object_set": [
+   "floor",
+   "flooring",
+   "vase",
+   "cart",
+   "spectacles",
+   "specs",
+   "eyeglasses",
+   "glasses",
+   "inside arm",
+   "cushion",
+   "ashtray",
+   "drawer",
+   "flower",
+   "seat base",
+   "arm",
+   "bottle",
+   "coffee table",
+   "cocktail table",
+   "seat cushion",
+   "boat",
+   "wall",
+   "armchair",
+   "outside arm",
+   "back pillow",
+   "curtain",
+   "drape",
+   "drapery",
+   "mantle",
+   "pall",
+   "book",
+   "candlestick",
+   "candle holder",
+   "cabinet",
+   "box"
+  ],
+  "data_source": "ADE"
+ }
+]

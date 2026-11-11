@@ -1,0 +1,354 @@
+[
+ {
+  "folder": "/validation/image/heterogenous-images/bbox/ADE/ADE_val_00000538.png",
+  "filename": "ADE_val_00000538.jpg",
+  "source": {
+   "database": "Unknown",
+   "image_id": "None",
+   "coco_id": "None",
+   "flickr_id": "None"
+  },
+  "size": {
+   "width": "500",
+   "height": "315",
+   "depth": "3"
+  },
+  "segmented": "0",
+  "objects": [
+   {
+    "name": "plant",
+    "object_id": "8",
+    "difficult": "0",
+    "bndbox": {
+     "xmin": 287,
+     "ymin": 283,
+     "xmax": 345,
+     "ymax": 313
+    },
+    "bbox_number": 1
+   },
+   {
+    "name": "roof",
+    "object_id": "18",
+    "difficult": "0",
+    "bndbox": {
+     "xmin": 343,
+     "ymin": 26,
+     "xmax": 451,
+     "ymax": 57
+    },
+    "bbox_number": 2
+   },
+   {
+    "name": "window",
+    "object_id": "15",
+    "difficult": "0",
+    "bndbox": {
+     "xmin": 112,
+     "ymin": 113,
+     "xmax": 135,
+     "ymax": 182
+    },
+    "bbox_number": 3
+   },
+   {
+    "name": "tree",
+    "object_id": "2",
+    "difficult": "0",
+    "bndbox": {
+     "xmin": 0,
+     "ymin": 15,
+     "xmax": 92,
+     "ymax": 235
+    },
+    "bbox_number": 4
+   },
+   {
+    "name": "door",
+    "object_id": "24",
+    "difficult": "0",
+    "bndbox": {
+     "xmin": 190,
+     "ymin": 219,
+     "xmax": 215,
+     "ymax": 301
+    },
+    "bbox_number": 5
+   }
+  ],
+  "relations": [],
+  "object_set": [
+   "tree",
+   "door",
+   "flower",
+   "chimney",
+   "window",
+   "plant",
+   "flora",
+   "plant life",
+   "sky",
+   "pot",
+   "flowerpot",
+   "roof",
+   "house"
+  ],
+  "data_source": "ADE"
+ },
+ {
+  "folder": "/validation/image/heterogenous-images/bbox/ADE/ADE_val_00001432.png",
+  "filename": "ADE_val_00001432.jpg",
+  "source": {
+   "database": "Unknown",
+   "image_id": "None",
+   "coco_id": "None",
+   "flickr_id": "None"
+  },
+  "size": {
+   "width": "2200",
+   "height": "1650",
+   "depth": "3"
+  },
+  "segmented": "0",
+  "objects": [
+   {
+    "name": "mirror",
+    "object_id": "17",
+    "difficult": "0",
+    "bndbox": {
+     "xmin": 130,
+     "ymin": 170,
+     "xmax": 371,
+     "ymax": 1036
+    },
+    "bbox_number": 1
+   },
+   {
+    "name": "chair",
+    "object_id": "7",
+    "difficult": "0",
+    "bndbox": {
+     "xmin": 1999,
+     "ymin": 1128,
+     "xmax": 2198,
+     "ymax": 1339
+    },
+    "bbox_number": 2
+   },
+   {
+    "name": "table",
+    "object_id": "8",
+    "difficult": "0",
+    "bndbox": {
+     "xmin": 222,
+     "ymin": 1051,
+     "xmax": 611,
+     "ymax": 1197
+    },
+    "bbox_number": 3
+   },
+   {
+    "name": "cushion",
+    "object_id": "22",
+    "difficult": "0",
+    "bndbox": {
+     "xmin": 548,
+     "ymin": 909,
+     "xmax": 712,
+     "ymax": 1150
+    },
+    "bbox_number": 4
+   },
+   {
+    "name": "column",
+    "object_id": "44",
+    "difficult": "0",
+    "bndbox": {
+     "xmin": 305,
+     "ymin": 802,
+     "xmax": 434,
+     "ymax": 1099
+    },
+    "bbox_number": 5
+   }
+  ],
+  "relations": [],
+  "object_set": [
+   "leg",
+   "ottoman",
+   "pouf",
+   "pouffe",
+   "puff",
+   "hassock",
+   "bed",
+   "apron",
+   "top",
+   "sofa",
+   "couch",
+   "lounge",
+   "cushion",
+   "table",
+   "telephone",
+   "phone",
+   "telephone set",
+   "seat base",
+   "curtain",
+   "drape",
+   "drapery",
+   "mantle",
+   "pall",
+   "painting",
+   "picture",
+   "wall",
+   "light source",
+   "back pillow",
+   "mirror",
+   "shade",
+   "frame",
+   "coffee table",
+   "cocktail table",
+   "chair",
+   "floor",
+   "flooring",
+   "column",
+   "ceiling",
+   "lamp",
+   "seat cushion"
+  ],
+  "data_source": "ADE"
+ },
+ {
+  "folder": "/validation/image/heterogenous-images/bbox/ADE/ADE_val_00000310.png",
+  "filename": "ADE_val_00000310.jpg",
+  "source": {
+   "database": "Unknown",
+   "image_id": "None",
+   "coco_id": "None",
+   "flickr_id": "None"
+  },
+  "size": {
+   "width": "1415",
+   "height": "1095",
+   "depth": "3"
+  },
+  "segmented": "0",
+  "objects": [
+   {
+    "name": "door",
+    "object_id": "42",
+    "difficult": "0",
+    "bndbox": {
+     "xmin": 186,
+     "ymin": 446,
+     "xmax": 333,
+     "ymax": 674
+    },
+    "bbox_number": 1
+   },
+   {
+    "name": "flower",
+    "object_id": "15",
+    "difficult": "0",
+    "bndbox": {
+     "xmin": 1106,
+     "ymin": 256,
+     "xmax": 1346,
+     "ymax": 449
+    },
+    "bbox_number": 2
+   },
+   {
+    "name": "leg",
+    "object_id": "69",
+    "difficult": "0",
+    "bndbox": {
+     "xmin": 1025,
+     "ymin": 652,
+     "xmax": 1294,
+     "ymax": 892
+    },
+    "bbox_number": 3
+   },
+   {
+    "name": "plant",
+    "object_id": "26",
+    "difficult": "0",
+    "bndbox": {
+     "xmin": 231,
+     "ymin": 190,
+     "xmax": 371,
+     "ymax": 342
+    },
+    "bbox_number": 4
+   },
+   {
+    "name": "picture",
+    "object_id": "27",
+    "difficult": "0",
+    "bndbox": {
+     "xmin": 4,
+     "ymin": 50,
+     "xmax": 222,
+     "ymax": 372
+    },
+    "bbox_number": 5
+   }
+  ],
+  "relations": [],
+  "object_set": [
+   "door",
+   "leg",
+   "violin",
+   "arm",
+   "keys",
+   "top",
+   "armchair",
+   "ice bucket",
+   "back",
+   "chandelier",
+   "pendant",
+   "pendent",
+   "rug",
+   "carpet",
+   "carpeting",
+   "score",
+   "glass",
+   "drinking glass",
+   "buffet",
+   "counter",
+   "sideboard",
+   "table",
+   "music stand",
+   "painting",
+   "picture",
+   "wall",
+   "seat",
+   "vase",
+   "windowpane",
+   "window",
+   "candlestick",
+   "candle holder",
+   "plant",
+   "flora",
+   "plant life",
+   "cabinet",
+   "tray",
+   "drawer",
+   "chair",
+   "floor",
+   "flooring",
+   "flower",
+   "piano",
+   "pianoforte",
+   "forte-piano",
+   "ceiling",
+   "figurine",
+   "statuette",
+   "pot",
+   "flowerpot",
+   "bottle",
+   "bench",
+   "book"
+  ],
+  "data_source": "ADE"
+ }
+]

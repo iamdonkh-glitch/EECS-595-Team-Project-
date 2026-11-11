@@ -1,0 +1,347 @@
+[
+ {
+  "folder": "/train/images/mixed-images/bbox/ADE/ADE_train_00004644.png",
+  "filename": "ADE_train_00004644.jpg",
+  "source": {
+   "database": "Unknown",
+   "image_id": "None",
+   "coco_id": "None",
+   "flickr_id": "None"
+  },
+  "size": {
+   "width": "256",
+   "height": "256",
+   "depth": "3"
+  },
+  "segmented": "0",
+  "objects": [
+   {
+    "name": "tree",
+    "object_id": "25",
+    "difficult": "0",
+    "bndbox": {
+     "xmin": 165,
+     "ymin": 182,
+     "xmax": 190,
+     "ymax": 226
+    },
+    "area": 1100,
+    "bbox_number": 1
+   },
+   {
+    "name": "window",
+    "object_id": "9",
+    "difficult": "0",
+    "bndbox": {
+     "xmin": 31,
+     "ymin": 85,
+     "xmax": 67,
+     "ymax": 110
+    },
+    "area": 900,
+    "bbox_number": 2
+   },
+   {
+    "name": "window",
+    "object_id": "10",
+    "difficult": "0",
+    "bndbox": {
+     "xmin": 29,
+     "ymin": 132,
+     "xmax": 66,
+     "ymax": 157
+    },
+    "area": 925,
+    "bbox_number": 3
+   },
+   {
+    "name": "plant",
+    "object_id": "24",
+    "difficult": "0",
+    "bndbox": {
+     "xmin": 54,
+     "ymin": 205,
+     "xmax": 91,
+     "ymax": 245
+    },
+    "area": 1480,
+    "bbox_number": 4
+   },
+   {
+    "name": "plant",
+    "object_id": "23",
+    "difficult": "0",
+    "bndbox": {
+     "xmin": 2,
+     "ymin": 190,
+     "xmax": 34,
+     "ymax": 252
+    },
+    "area": 1984,
+    "bbox_number": 5
+   }
+  ],
+  "relations": [],
+  "object_set": [
+   "balcony",
+   "building",
+   "edifice",
+   "windowpane",
+   "window",
+   "door",
+   "plant",
+   "flora",
+   "plant life",
+   "streetlight",
+   "street lamp",
+   "grill",
+   "grille",
+   "grillwork",
+   "grass",
+   "sky",
+   "tree"
+  ],
+  "data_source": "ADE"
+ },
+ {
+  "folder": "/train/images/mixed-images/bbox/ADE/ADE_train_00006968.png",
+  "filename": "ADE_train_00006968.jpg",
+  "source": {
+   "database": "Unknown",
+   "image_id": "None",
+   "coco_id": "None",
+   "flickr_id": "None"
+  },
+  "size": {
+   "width": "256",
+   "height": "256",
+   "depth": "3"
+  },
+  "segmented": "0",
+  "objects": [
+   {
+    "name": "picture",
+    "object_id": "0",
+    "difficult": "0",
+    "bndbox": {
+     "xmin": 1,
+     "ymin": 29,
+     "xmax": 27,
+     "ymax": 123
+    },
+    "area": 2444,
+    "bbox_number": 1
+   },
+   {
+    "name": "curtain",
+    "object_id": "16",
+    "difficult": "0",
+    "bndbox": {
+     "xmin": 212,
+     "ymin": 35,
+     "xmax": 256,
+     "ymax": 59
+    },
+    "area": 1056,
+    "bbox_number": 2
+   },
+   {
+    "name": "chair",
+    "object_id": "5",
+    "difficult": "0",
+    "bndbox": {
+     "xmin": 209,
+     "ymin": 151,
+     "xmax": 256,
+     "ymax": 238
+    },
+    "area": 4089,
+    "bbox_number": 3
+   },
+   {
+    "name": "curtain",
+    "object_id": "2",
+    "difficult": "0",
+    "bndbox": {
+     "xmin": 44,
+     "ymin": 21,
+     "xmax": 100,
+     "ymax": 53
+    },
+    "area": 1792,
+    "bbox_number": 4
+   },
+   {
+    "name": "curtain",
+    "object_id": "15",
+    "difficult": "0",
+    "bndbox": {
+     "xmin": 125,
+     "ymin": 35,
+     "xmax": 175,
+     "ymax": 57
+    },
+    "area": 1100,
+    "bbox_number": 5
+   }
+  ],
+  "relations": [],
+  "object_set": [
+   "windowpane",
+   "window",
+   "floor",
+   "flooring",
+   "bowl",
+   "table",
+   "painting",
+   "picture",
+   "place mat",
+   "curtain",
+   "drape",
+   "drapery",
+   "mantle",
+   "pall",
+   "plate",
+   "wall socket",
+   "wall plug",
+   "electric outlet",
+   "electrical outlet",
+   "outlet",
+   "electric receptacle",
+   "glass",
+   "drinking glass",
+   "chandelier",
+   "pendant",
+   "pendent",
+   "wall",
+   "chair",
+   "napkin",
+   "table napkin",
+   "serviette"
+  ],
+  "data_source": "ADE"
+ },
+ {
+  "folder": "/train/images/mixed-images/bbox/ADE/ADE_train_00020366.png",
+  "filename": "ADE_train_00020366.jpg",
+  "source": {
+   "database": "Unknown",
+   "image_id": "None",
+   "coco_id": "None",
+   "flickr_id": "None"
+  },
+  "size": {
+   "width": "1152",
+   "height": "766",
+   "depth": "3"
+  },
+  "segmented": "0",
+  "objects": [
+   {
+    "name": "window",
+    "object_id": "9",
+    "difficult": "0",
+    "bndbox": {
+     "xmin": 582,
+     "ymin": 250,
+     "xmax": 699,
+     "ymax": 422
+    },
+    "area": 20124,
+    "bbox_number": 1
+   },
+   {
+    "name": "floors",
+    "object_id": "21",
+    "difficult": "0",
+    "bndbox": {
+     "xmin": 539,
+     "ymin": 618,
+     "xmax": 1013,
+     "ymax": 766
+    },
+    "area": 70152,
+    "bbox_number": 2
+   },
+   {
+    "name": "window",
+    "object_id": "11",
+    "difficult": "0",
+    "bndbox": {
+     "xmin": 908,
+     "ymin": 249,
+     "xmax": 1034,
+     "ymax": 440
+    },
+    "area": 24066,
+    "bbox_number": 3
+   },
+   {
+    "name": "window",
+    "object_id": "10",
+    "difficult": "0",
+    "bndbox": {
+     "xmin": 701,
+     "ymin": 248,
+     "xmax": 904,
+     "ymax": 590
+    },
+    "area": 69426,
+    "bbox_number": 4
+   },
+   {
+    "name": "cushion",
+    "object_id": "19",
+    "difficult": "0",
+    "bndbox": {
+     "xmin": 331,
+     "ymin": 373,
+     "xmax": 467,
+     "ymax": 470
+    },
+    "area": 13192,
+    "bbox_number": 5
+   }
+  ],
+  "relations": [],
+  "object_set": [
+   "plant",
+   "flora",
+   "plant life",
+   "wall socket",
+   "wall plug",
+   "electric outlet",
+   "electrical outlet",
+   "outlet",
+   "electric receptacle",
+   "telephone",
+   "phone",
+   "telephone set",
+   "curtain",
+   "drape",
+   "drapery",
+   "mantle",
+   "pall",
+   "wall",
+   "bottle",
+   "clock",
+   "shade",
+   "column",
+   "bed",
+   "cushion",
+   "lamp",
+   "table",
+   "wardrobe",
+   "closet",
+   "press",
+   "base",
+   "cabinet",
+   "windowpane",
+   "window",
+   "floor",
+   "flooring",
+   "ceiling"
+  ],
+  "data_source": "ADE"
+ }
+]

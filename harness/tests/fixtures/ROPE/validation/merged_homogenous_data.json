@@ -1,0 +1,270 @@
+[
+ {
+  "folder": "/validation/image/homogenous-images/bbox/COCO/000000264968.png",
+  "filename": "000000264968.jpg",
+  "source": {
+   "database": "COCO",
+   "image_id": "264968"
+  },
+  "size": {
+   "width": "334",
+   "height": "500",
+   "depth": "3"
+  },
+  "segmented": "0",
+  "objects": [
+   {
+    "name": "person",
+    "object_id": "451335",
+    "difficult": "0",
+    "bndbox": {
+     "xmin": "244",
+     "ymin": "0",
+     "xmax": "300",
+     "ymax": "92"
+    },
+    "bbox_number": 1
+   },
+   {
+    "name": "person",
+    "object_id": "2151926",
+    "difficult": "0",
+    "bndbox": {
+     "xmin": "0",
+     "ymin": "0",
+     "xmax": "62",
+     "ymax": "178"
+    },
+    "bbox_number": 2
+   },
+   {
+    "name": "person",
+    "object_id": "510286",
+    "difficult": "0",
+    "bndbox": {
+     "xmin": "193",
+     "ymin": "0",
+     "xmax": "247",
+     "ymax": "99"
+    },
+    "bbox_number": 3
+   },
+   {
+    "name": "person",
+    "object_id": "2207611",
+    "difficult": "0",
+    "bndbox": {
+     "xmin": "160",
+     "ymin": "0",
+     "xmax": "200",
+     "ymax": "93"
+    },
+    "bbox_number": 4
+   },
+   {
+    "name": "person",
+    "object_id": "1727602",
+    "difficult": "0",
+    "bndbox": {
+     "xmin": "60",
+     "ymin": "0",
+     "xmax": "106",
+     "ymax": "121"
+    },
+    "bbox_number": 5
+   }
+  ],
+  "object_set": [
+   "plastic",
+   "clothes",
+   "sand",
+   "baseball bat",
+   "ground",
+   "playingfield",
+   "person",
+   "textile"
+  ],
+  "data_source": "COCO"
+ },
+ {
+  "folder": "/validation/image/homogenous-images/bbox/COCO/000000075612.png",
+  "filename": "000000075612.jpg",
+  "source": {
+   "database": "COCO",
+   "image_id": "75612"
+  },
+  "size": {
+   "width": "640",
+   "height": "480",
+   "depth": "3"
+  },
+  "segmented": "0",
+  "objects": [
+   {
+    "name": "person",
+    "object_id": "1292445",
+    "difficult": "0",
+    "bndbox": {
+     "xmin": "422",
+     "ymin": "195",
+     "xmax": "463",
+     "ymax": "393"
+    },
+    "bbox_number": 1
+   },
+   {
+    "name": "person",
+    "object_id": "1303344",
+    "difficult": "0",
+    "bndbox": {
+     "xmin": "362",
+     "ymin": "183",
+     "xmax": "403",
+     "ymax": "302"
+    },
+    "bbox_number": 2
+   },
+   {
+    "name": "person",
+    "object_id": "1309585",
+    "difficult": "0",
+    "bndbox": {
+     "xmin": "82",
+     "ymin": "221",
+     "xmax": "130",
+     "ymax": "306"
+    },
+    "bbox_number": 3
+   },
+   {
+    "name": "person",
+    "object_id": "1299726",
+    "difficult": "0",
+    "bndbox": {
+     "xmin": "250",
+     "ymin": "181",
+     "xmax": "311",
+     "ymax": "421"
+    },
+    "bbox_number": 4
+   },
+   {
+    "name": "person",
+    "object_id": "1714813",
+    "difficult": "0",
+    "bndbox": {
+     "xmin": "182",
+     "ymin": "173",
+     "xmax": "221",
+     "ymax": "253"
+    },
+    "bbox_number": 5
+   }
+  ],
+  "object_set": [
+   "chair",
+   "ceiling",
+   "carpet",
+   "clothes",
+   "furniture",
+   "wall",
+   "person",
+   "textile",
+   "remote"
+  ],
+  "data_source": "COCO"
+ },
+ {
+  "folder": "/validation/image/homogenous-images/bbox/COCO/000000087476.png",
+  "filename": "000000087476.jpg",
+  "source": {
+   "database": "COCO",
+   "image_id": "87476"
+  },
+  "size": {
+   "width": "427",
+   "height": "640",
+   "depth": "3"
+  },
+  "segmented": "0",
+  "objects": [
+   {
+    "name": "person",
+    "object_id": "2029348",
+    "difficult": "0",
+    "bndbox": {
+     "xmin": "126",
+     "ymin": "34",
+     "xmax": "178",
+     "ymax": "131"
+    },
+    "bbox_number": 1
+   },
+   {
+    "name": "person",
+    "object_id": "2163895",
+    "difficult": "0",
+    "bndbox": {
+     "xmin": "366",
+     "ymin": "63",
+     "xmax": "400",
+     "ymax": "152"
+    },
+    "bbox_number": 2
+   },
+   {
+    "name": "person",
+    "object_id": "1253651",
+    "difficult": "0",
+    "bndbox": {
+     "xmin": "169",
+     "ymin": "8",
+     "xmax": "228",
+     "ymax": "117"
+    },
+    "bbox_number": 3
+   },
+   {
+    "name": "person",
+    "object_id": "539879",
+    "difficult": "0",
+    "bndbox": {
+     "xmin": "334",
+     "ymin": "136",
+     "xmax": "425",
+     "ymax": "477"
+    },
+    "bbox_number": 4
+   },
+   {
+    "name": "person",
+    "object_id": "551078",
+    "difficult": "0",
+    "bndbox": {
+     "xmin": "31",
+     "ymin": "41",
+     "xmax": "104",
+     "ymax": "132"
+    },
+    "bbox_number": 5
+   }
+  ],
+  "object_set": [
+   "pavement",
+   "plastic",
+   "tent",
+   "road",
+   "skateboard",
+   "window",
+   "clothes",
+   "paper",
+   "banner",
+   "building",
+   "floor",
+   "person",
+   "textile",
+   "surfboard"
+  ],
+  "data_source": "COCO"
+ }
+]

@@ -1,0 +1,326 @@
+[
+ {
+  "folder": "/validation/image/BAAAA-images/bbox/ADE/ADE_val_00000092.png",
+  "filename": "ADE_val_00000092.jpg",
+  "source": {
+   "database": "Unknown",
+   "image_id": "None",
+   "coco_id": "None",
+   "flickr_id": "None"
+  },
+  "size": {
+   "width": "1024",
+   "height": "768",
+   "depth": "3"
+  },
+  "segmented": "0",
+  "objects": [
+   {
+    "name": "drawer",
+    "object_id": "37",
+    "difficult": "0",
+    "bndbox": {
+     "xmin": 472,
+     "ymin": 576,
+     "xmax": 543,
+     "ymax": 715
+    },
+    "bbox_number": 1
+   },
+   {
+    "name": "door",
+    "object_id": "39",
+    "difficult": "0",
+    "bndbox": {
+     "xmin": 386,
+     "ymin": 586,
+     "xmax": 465,
+     "ymax": 757
+    },
+    "bbox_number": 2
+   },
+   {
+    "name": "door",
+    "object_id": "1",
+    "difficult": "0",
+    "bndbox": {
+     "xmin": 862,
+     "ymin": 0,
+     "xmax": 1023,
+     "ymax": 764
+    },
+    "bbox_number": 3
+   },
+   {
+    "name": "door",
+    "object_id": "31",
+    "difficult": "0",
+    "bndbox": {
+     "xmin": 458,
+     "ymin": 188,
+     "xmax": 497,
+     "ymax": 443
+    },
+    "bbox_number": 4
+   },
+   {
+    "name": "door",
+    "object_id": "29",
+    "difficult": "0",
+    "bndbox": {
+     "xmin": 402,
+     "ymin": 150,
+     "xmax": 456,
+     "ymax": 456
+    },
+    "bbox_number": 5
+   }
+  ],
+  "relations": [],
+  "object_set": [
+   "door",
+   "aperture",
+   "countertop",
+   "tap",
+   "sink",
+   "towel",
+   "sconce",
+   "faucet",
+   "bulb",
+   "wall",
+   "handle",
+   "toilet",
+   "can",
+   "commode",
+   "crapper",
+   "pot",
+   "potty",
+   "stool",
+   "throne",
+   "mirror",
+   "shade",
+   "windowpane",
+   "window",
+   "lid",
+   "cabinet",
+   "towel rail",
+   "drawer",
+   "knob",
+   "grill",
+   "grille",
+   "grillwork",
+   "light",
+   "light source",
+   "ceiling",
+   "bowl"
+  ],
+  "data_source": "ADE"
+ },
+ {
+  "folder": "/validation/image/BAAAA-images/bbox/ADE/ADE_val_00001473.png",
+  "filename": "ADE_val_00001473.jpg",
+  "source": {
+   "database": "Unknown",
+   "image_id": "None",
+   "coco_id": "None",
+   "flickr_id": "None"
+  },
+  "size": {
+   "width": "256",
+   "height": "256",
+   "depth": "3"
+  },
+  "segmented": "0",
+  "objects": [
+   {
+    "name": "drawer",
+    "object_id": "38",
+    "difficult": "0",
+    "bndbox": {
+     "xmin": 4,
+     "ymin": 202,
+     "xmax": 30,
+     "ymax": 235
+    },
+    "bbox_number": 1
+   },
+   {
+    "name": "door",
+    "object_id": "32",
+    "difficult": "0",
+    "bndbox": {
+     "xmin": 156,
+     "ymin": 194,
+     "xmax": 181,
+     "ymax": 255
+    },
+    "bbox_number": 2
+   },
+   {
+    "name": "door",
+    "object_id": "17",
+    "difficult": "0",
+    "bndbox": {
+     "xmin": 164,
+     "ymin": 44,
+     "xmax": 185,
+     "ymax": 131
+    },
+    "bbox_number": 3
+   },
+   {
+    "name": "door",
+    "object_id": "34",
+    "difficult": "0",
+    "bndbox": {
+     "xmin": 181,
+     "ymin": 210,
+     "xmax": 216,
+     "ymax": 255
+    },
+    "bbox_number": 4
+   },
+   {
+    "name": "door",
+    "object_id": "42",
+    "difficult": "0",
+    "bndbox": {
+     "xmin": 9,
+     "ymin": 55,
+     "xmax": 33,
+     "ymax": 132
+    },
+    "bbox_number": 5
+   }
+  ],
+  "relations": [],
+  "object_set": [
+   "hood",
+   "exhaust hood",
+   "door",
+   "oven",
+   "shelf",
+   "work surface",
+   "sink",
+   "wall",
+   "handle",
+   "knife",
+   "windowpane",
+   "window",
+   "plant",
+   "flora",
+   "plant life",
+   "cabinet",
+   "stove",
+   "drawer",
+   "knob",
+   "light",
+   "light source",
+   "ceiling",
+   "coffee maker",
+   "pot",
+   "flowerpot",
+   "stove",
+   "kitchen stove",
+   "range",
+   "kitchen range",
+   "cooking stove"
+  ],
+  "data_source": "ADE"
+ },
+ {
+  "folder": "/validation/image/BAAAA-images/bbox/ADE/ADE_val_00000538.png",
+  "filename": "ADE_val_00000538.jpg",
+  "source": {
+   "database": "Unknown",
+   "image_id": "None",
+   "coco_id": "None",
+   "flickr_id": "None"
+  },
+  "size": {
+   "width": "500",
+   "height": "315",
+   "depth": "3"
+  },
+  "segmented": "0",
+  "objects": [
+   {
+    "name": "plant",
+    "object_id": "8",
+    "difficult": "0",
+    "bndbox": {
+     "xmin": 287,
+     "ymin": 283,
+     "xmax": 345,
+     "ymax": 313
+    },
+    "bbox_number": 1
+   },
+   {
+    "name": "window",
+    "object_id": "16",
+    "difficult": "0",
+    "bndbox": {
+     "xmin": 107,
+     "ymin": 218,
+     "xmax": 129,
+     "ymax": 292
+    },
+    "bbox_number": 2
+   },
+   {
+    "name": "window",
+    "object_id": "9",
+    "difficult": "0",
+    "bndbox": {
+     "xmin": 288,
+     "ymin": 75,
+     "xmax": 339,
+     "ymax": 155
+    },
+    "bbox_number": 3
+   },
+   {
+    "name": "window",
+    "object_id": "17",
+    "difficult": "0",
+    "bndbox": {
+     "xmin": 57,
+     "ymin": 218,
+     "xmax": 95,
+     "ymax": 284
+    },
+    "bbox_number": 4
+   },
+   {
+    "name": "window",
+    "object_id": "15",
+    "difficult": "0",
+    "bndbox": {
+     "xmin": 112,
+     "ymin": 113,
+     "xmax": 135,
+     "ymax": 182
+    },
+    "bbox_number": 5
+   }
+  ],
+  "relations": [],
+  "object_set": [
+   "tree",
+   "door",
+   "flower",
+   "chimney",
+   "window",
+   "plant",
+   "flora",
+   "plant life",
+   "sky",
+   "pot",
+   "flowerpot",
+   "roof",
+   "house"
+  ],
+  "data_source": "ADE"
+ }
+]

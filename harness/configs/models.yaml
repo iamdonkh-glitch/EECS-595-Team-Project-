@@ -1,0 +1,35 @@
+# Model paths and decoding. ${MODELS_DIR} comes from env.sh
+# ($CSE595_ROOT/models unless MODELS_DIR is set).
+# Sampling = card-recommended settings; --greedy overrides with temperature 0.
+defaults:
+  dtype: bfloat16
+  max_model_len: 16384        # ~1k image tokens + ~400 prompt tokens + up to max_tokens
+  gpu_memory_utilization: 0.90
+  limit_mm_per_prompt: {image: 1}
+  answer_max_tokens: 128      # continuation length after a forced </think> (budget mode)
+
+models:
+  mimo-sft-2508:
+    path: ${MODELS_DIR}/MiMo-VL-7B-SFT-2508
+    family: mimo
+    thinking: true            # emits <think> itself (no prefill); /no_think documented for 2508 only
+    max_tokens: 8192          # card gives none; its 256 example is too small for thinking
+    sampling: {temperature: 0.3, top_p: 0.95}
+  mimo-rl-2508:
+    path: ${MODELS_DIR}/MiMo-VL-7B-RL-2508
+    family: mimo
+    thinking: true
+    max_tokens: 8192
+    sampling: {temperature: 0.3, top_p: 0.95}
+  qwen3vl-8b-instruct:
+    path: ${MODELS_DIR}/Qwen3-VL-8B-Instruct
+    family: qwen3vl
+    thinking: false
+    max_tokens: 1024
+    sampling: {temperature: 0.7, top_p: 0.8, top_k: 20, repetition_penalty: 1.0, presence_penalty: 1.5}
+  qwen3vl-8b-thinking:
+    path: ${MODELS_DIR}/Qwen3-VL-8B-Thinking
+    family: qwen3vl
+    thinking: true            # template prefills <think>; output contains only </think>
+    max_tokens: 8192          # card: 40960; capped here, rows record finish_reason=length
+    sampling: {temperature: 1.0, top_p: 0.95, top_k: 20, presence_penalty: 0.0}

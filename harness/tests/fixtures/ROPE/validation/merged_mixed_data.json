@@ -1,0 +1,333 @@
+[
+ {
+  "folder": "/validation/image/mixed-images/bbox/ADE/ADE_val_00000285.png",
+  "filename": "ADE_val_00000285.jpg",
+  "source": {
+   "database": "Unknown",
+   "image_id": "None",
+   "coco_id": "None",
+   "flickr_id": "None"
+  },
+  "size": {
+   "width": "960",
+   "height": "1280",
+   "depth": "3"
+  },
+  "segmented": "0",
+  "objects": [
+   {
+    "name": "column",
+    "object_id": "7",
+    "difficult": "0",
+    "bndbox": {
+     "xmin": 497,
+     "ymin": 146,
+     "xmax": 590,
+     "ymax": 700
+    },
+    "area": 51522,
+    "bbox_number": 1
+   },
+   {
+    "name": "grass",
+    "object_id": "4",
+    "difficult": "0",
+    "bndbox": {
+     "xmin": 0,
+     "ymin": 962,
+     "xmax": 955,
+     "ymax": 1249
+    },
+    "area": 274085,
+    "bbox_number": 2
+   },
+   {
+    "name": "column",
+    "object_id": "6",
+    "difficult": "0",
+    "bndbox": {
+     "xmin": 700,
+     "ymin": 115,
+     "xmax": 798,
+     "ymax": 690
+    },
+    "area": 56350,
+    "bbox_number": 3
+   },
+   {
+    "name": "building",
+    "object_id": "1",
+    "difficult": "0",
+    "bndbox": {
+     "xmin": 0,
+     "ymin": 234,
+     "xmax": 177,
+     "ymax": 841
+    },
+    "area": 107439,
+    "bbox_number": 4
+   },
+   {
+    "name": "tree",
+    "object_id": "15",
+    "difficult": "0",
+    "bndbox": {
+     "xmin": 361,
+     "ymin": 5,
+     "xmax": 950,
+     "ymax": 272
+    },
+    "area": 157263,
+    "bbox_number": 5
+   }
+  ],
+  "relations": [],
+  "object_set": [
+   "tree",
+   "door",
+   "column",
+   "building",
+   "edifice",
+   "flag",
+   "grass",
+   "window",
+   "sky",
+   "signboard",
+   "sign",
+   "wall",
+   "stairway",
+   "staircase",
+   "sidewalk",
+   "pavement",
+   "handrail"
+  ],
+  "data_source": "ADE"
+ },
+ {
+  "folder": "/validation/image/mixed-images/bbox/ADE/ADE_val_00000528.png",
+  "filename": "ADE_val_00000528.jpg",
+  "source": {
+   "database": "Unknown",
+   "image_id": "None",
+   "coco_id": "None",
+   "flickr_id": "None"
+  },
+  "size": {
+   "width": "1024",
+   "height": "768",
+   "depth": "3"
+  },
+  "segmented": "0",
+  "objects": [
+   {
+    "name": "cushion",
+    "object_id": "27",
+    "difficult": "0",
+    "bndbox": {
+     "xmin": 413,
+     "ymin": 579,
+     "xmax": 803,
+     "ymax": 697
+    },
+    "area": 46020,
+    "bbox_number": 1
+   },
+   {
+    "name": "picture",
+    "object_id": "4",
+    "difficult": "0",
+    "bndbox": {
+     "xmin": 397,
+     "ymin": 2,
+     "xmax": 655,
+     "ymax": 142
+    },
+    "area": 36120,
+    "bbox_number": 2
+   },
+   {
+    "name": "cushion",
+    "object_id": "24",
+    "difficult": "0",
+    "bndbox": {
+     "xmin": 717,
+     "ymin": 486,
+     "xmax": 1024,
+     "ymax": 594
+    },
+    "area": 33156,
+    "bbox_number": 3
+   },
+   {
+    "name": "picture",
+    "object_id": "13",
+    "difficult": "0",
+    "bndbox": {
+     "xmin": 779,
+     "ymin": 1,
+     "xmax": 1021,
+     "ymax": 365
+    },
+    "area": 88088,
+    "bbox_number": 4
+   },
+   {
+    "name": "cushion",
+    "object_id": "9",
+    "difficult": "0",
+    "bndbox": {
+     "xmin": 465,
+     "ymin": 296,
+     "xmax": 634,
+     "ymax": 431
+    },
+    "area": 22815,
+    "bbox_number": 5
+   }
+  ],
+  "relations": [],
+  "object_set": [
+   "floor",
+   "flooring",
+   "flower",
+   "vase",
+   "table",
+   "blanket",
+   "cover",
+   "basket",
+   "handbasket",
+   "bowl",
+   "sofa",
+   "couch",
+   "lounge",
+   "painting",
+   "picture",
+   "necklace",
+   "plate",
+   "cushion",
+   "wall",
+   "book"
+  ],
+  "data_source": "ADE"
+ },
+ {
+  "folder": "/validation/image/mixed-images/bbox/ADE/ADE_val_00000255.png",
+  "filename": "ADE_val_00000255.jpg",
+  "source": {
+   "database": "Unknown",
+   "image_id": "None",
+   "coco_id": "None",
+   "flickr_id": "None"
+  },
+  "size": {
+   "width": "420",
+   "height": "325",
+   "depth": "3"
+  },
+  "segmented": "0",
+  "objects": [
+   {
+    "name": "drawer",
+    "object_id": "31",
+    "difficult": "0",
+    "bndbox": {
+     "xmin": 145,
+     "ymin": 265,
+     "xmax": 219,
+     "ymax": 310
+    },
+    "area": 3330,
+    "bbox_number": 1
+   },
+   {
+    "name": "drawer",
+    "object_id": "29",
+    "difficult": "0",
+    "bndbox": {
+     "xmin": 145,
+     "ymin": 232,
+     "xmax": 218,
+     "ymax": 272
+    },
+    "area": 2920,
+    "bbox_number": 2
+   },
+   {
+    "name": "drawer",
+    "object_id": "27",
+    "difficult": "0",
+    "bndbox": {
+     "xmin": 145,
+     "ymin": 197,
+     "xmax": 219,
+     "ymax": 235
+    },
+    "area": 2812,
+    "bbox_number": 3
+   },
+   {
+    "name": "shelf",
+    "object_id": "33",
+    "difficult": "0",
+    "bndbox": {
+     "xmin": 144,
+     "ymin": 21,
+     "xmax": 246,
+     "ymax": 182
+    },
+    "area": 16422,
+    "bbox_number": 4
+   },
+   {
+    "name": "cushion",
+    "object_id": "21",
+    "difficult": "0",
+    "bndbox": {
+     "xmin": 328,
+     "ymin": 266,
+     "xmax": 417,
+     "ymax": 323
+    },
+    "area": 5073,
+    "bbox_number": 5
+   }
+  ],
+  "relations": [],
+  "object_set": [
+   "chest of drawers",
+   "shelf",
+   "shoe",
+   "cushion",
+   "bag",
+   "handbag",
+   "pocketbook",
+   "purse",
+   "apparel",
+   "wearing apparel",
+   "dress",
+   "clothes",
+   "box",
+   "painting",
+   "picture",
+   "wall",
+   "shirt",
+   "handle",
+   "trouser",
+   "pant",
+   "hanger",
+   "double door",
+   "drawer",
+   "chair",
+   "floor",
+   "flooring",
+   "jacket",
+   "wardrobe",
+   "closet",
+   "press",
+   "hat",
+   "chapeau",
+   "lid"
+  ],
+  "data_source": "ADE"
+ }
+]

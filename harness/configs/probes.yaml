@@ -1,0 +1,17 @@
+# Probe defaults. CLI flags override.
+probes:
+  default:            # official multi-object prompt, 1 call/image
+    subsets: [AAAAB, BAAAA, heterogenous, homogenous, mixed]
+  single:             # official single-object prompt, 5 calls/image
+    subsets: [AAAAB, BAAAA, heterogenous, homogenous, mixed]
+  teacher_forcing:    # true labels of objects 1..k in the USER turn (official placement)
+    tf_mode: oneshot  # oneshot = objects 1-4 given, ask 5 (1 call); incremental = official 5 calls
+    subsets: [AAAAB, BAAAA, heterogenous, homogenous, mixed]
+  counterfactual:     # the four A objects given as wrong class C (seeded, not in object_set), ask B
+    seed: 0           # AAAAB: objects 1-4 = C, ask 5; BAAAA: objects 2-5 = C, ask 1
+    subsets: [AAAAB, BAAAA]
+  # one-shot teacher_forcing asks B the same way: AAAAB gives 1-4 (gold), asks 5; BAAAA gives 2-5, asks 1.
+  # no_think is a flag (--no-think, MiMo 2508 only), run with default and single.
+
+# Budget sweep: pass --budget N to any probe (truncate-and-close). suggested values:
+budget_sweep: [256, 512, 1024, 2048]
