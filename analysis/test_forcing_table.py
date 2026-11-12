@@ -186,6 +186,44 @@ def test_holm_families(tmp_path):
     assert after[("AAAAB", "TF one-shot, given=2")] < 1
 
 
+def test_given_boxes_and_cf_sim(tmp_path, capsys):
+    C1, C2 = "cabinet", "window"  # both on the ADE list, so the tolerant parse keeps them
+
+    def one(probe, idx, b_label, answer, given, cf=None, mode=None):
+        r = row(probe, "AAAAB", idx, b_label, tf_mode="oneshot" if probe == "teacher_forcing" else None,
+                cf=cf, answer=answer)
+        r["prefix_used"] = ["".join(f" obj{k}: {given}," for k in range(1, 5)) + " obj5:"]
+        if mode:
+            r.update(cf_mode=mode, key=r["key"] + "|" + mode)
+        return r
+    five = lambda labs: ", ".join(f"obj{k}: {x}" for k, x in enumerate(labs, 1))
+    rows = [one("teacher_forcing", 0, B, five([A] * 4 + [B]), A),   # rewrites, keeps the A labels
+            one("teacher_forcing", 1, B, f"obj5: {B}", A),            # answers only B
+            one("counterfactual", 0, A, five([C1] + [A] * 4), C1, cf=C1),  # C kept on box 1
+            one("counterfactual", 1, B, five([A] * 4 + [B]), C1, cf=C1),   # C dropped, boxes -> A
+            one("counterfactual", 0, C2, five([C2] * 5), C2, cf=C2, mode="near"),
+            one("counterfactual", 1, C2, five([A] * 4 + [C2]), C2, cf=C2, mode="near")]
+    rows[5]["tolerant_labels"] = [C2]
+    p = tmp_path / "g.jsonl"
+    p.write_text("\n".join(json.dumps(r) for r in rows) + "\n")
+    data = ft.load([str(p)])
+    assert ft.b_record(rows[0])["g"] == {"all5": 1, "keep": 1, "asA": 1, "anyC": 0}
+    assert ft.b_record(rows[1])["g"] == {"all5": 0, "keep": 0, "asA": 0, "anyC": 0}
+    assert ft.b_record(rows[2])["g"] == {"all5": 1, "keep": 0, "asA": 0, "anyC": 1}
+    assert ft.b_record(rows[3])["g"] == {"all5": 1, "keep": 0, "asA": 1, "anyC": 0}
+    g = {(r["order"], r["condition"]): r for r in ft.given_table(data)}
+    assert g[("AAAAB", "TF one-shot")]["all5"] == 0.5 and g[("AAAAB", "CF")]["anyC"] == 0.5
+    assert g[("AAAAB", "CF near")]["keep"] == 0.5 and g[("AAAAB", "CF near")]["anyC"] == 0.5
+    cs = {(r["order"], r["x"], r["y"]): r for r in ft.cf_sim_tests(data)}
+    near = cs[("AAAAB", "CF", "CF near")]
+    assert near["n"] == 2 and near["C"]["diff"] == 1 and near["C"]["c"] == 2 and near["A"]["diff"] == -0.5
+    ft.print_given_table(ft.given_table(data))
+    ft.print_cf_sim(ft.cf_sim_tests(data))
+    out = capsys.readouterr().out
+    assert "| m | Unseen | AAAAB | CF | 2 | 100.0 | 0.0 | 50.0 | 50.0 |" in out
+    assert "| m | Unseen | AAAAB | CF | CF near | 2 | +100.0" in out
+
+
 def test_out_of_scope_rows_are_dropped():
     r = row("default", "AAAAB", 0, A)
     assert ft.condition(dict(r, budget=512)) is None

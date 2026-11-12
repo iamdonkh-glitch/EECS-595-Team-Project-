@@ -39,6 +39,7 @@ import csv
 import glob
 import json
 import os
+import re
 import subprocess
 import sys
 
@@ -48,7 +49,7 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, HERE)
 import rq1_table as rq1  # noqa: E402  (also puts harness/ on sys.path)
 from rope_runner.data import candidates  # noqa: E402
-from rope_runner.scoring import keyed_segment, prefill_labels  # noqa: E402
+from rope_runner.scoring import keyed_segment, prefill_labels, tolerant_multi  # noqa: E402
 
 ORDERS = [("Adversarial", ("AAAAB", "BAAAA")), ("AAAAB", ("AAAAB",)), ("BAAAA", ("BAAAA",)),
           ("Homogeneous control", ("homogenous",))]
@@ -120,7 +121,31 @@ def b_record(r):
     rec["cut"] = cut
     for tag, lab in (("t", tol), ("s", strict)):
         rec[tag] = {"ok": 0, "A": 0, "C": 0} if cut else out(lab)
+    if len(objs) == 1 and r.get("prefix_place", "user") == "user" and not cut:
+        g = given_record(r, a_cls, cf)
+        if g:
+            rec["g"] = g
     return rec
+
+
+_GIVEN = re.compile(r"obj(\d)\s*:\s*([^,]+),")
+
+
+def given_record(r, a_cls, cf):
+    """What a one-shot answer (labels in the user turn) does with the boxes whose labels were given:
+    all5 = it writes a label for all five boxes (rewrites the list instead of only answering B);
+    keep = every given box keeps its given label; asA = every given box is labelled A; anyC = C stays
+    on at least one given box. None when no label was given (n_given = 0)."""
+    given = {int(k): v.strip().lower() for k, v in _GIVEN.findall((r.get("prefix_used") or [""])[0] or "")}
+    if not given:
+        return None
+    found = {k: (v or "").lower() for k, v in
+             tolerant_multi(r["stripped_answer"][0], candidates(r["split"], r["data_source"])).items()}
+    a, c = a_cls.lower(), (cf or "").lower()
+    return {"all5": int(all(k in found for k in range(1, 6))),
+            "keep": int(all(found.get(k) == v for k, v in given.items())),
+            "asA": int(all(found.get(k) == a for k in given)),
+            "anyC": int(bool(c) and any(found.get(k) == c for k in given))}
 
 
 def load(paths):
@@ -339,6 +364,75 @@ def print_after_prefill(rows):
         print(f"| {r['model']} | {r['split']} | {r['order']} | {r['condition']} | {r['n_images']} | {r['n_cut']} | "
               f"{c('first_ok')} | {c('first_A')} | {c('first_C') if cf else '-'} | {c('more')} | {c('restart')} | "
               f"{c('final_ok')} | {c('final_A')} | {c('final_C') if cf else '-'} | {c('unresolved')} |")
+    print()
+
+
+def given_table(data):
+    """One-shot probes with labels in the user turn: what the answer does with the given boxes."""
+    rows = []
+    for m in sorted({k[0] for k in data}):
+        for sp in rq1.SPLITS:
+            for oname, subs in ORDERS:
+                for cond in conditions_of(data, m):
+                    recs = [r["g"] for r in cell(data, m, cond, sp, subs).values() if "g" in r]
+                    if not recs:
+                        continue
+                    row = dict(model=m, split=rq1.SPLIT_NAME[sp], order=oname, condition=cond, n=len(recs))
+                    for what in ("all5", "keep", "asA", "anyC"):
+                        row[what] = float(np.mean([g[what] for g in recs]))
+                    rows.append(row)
+    return rows
+
+
+def print_given_table(rows):
+    print("## What the answer does with the given boxes (one-shot, labels in the user turn; %)\n")
+    print("Over answered rows (calls for B not cut), tolerant parse, last objK: mention per box. writes all 5 = "
+          "a label for every box, i.e. the model rewrites the list instead of answering only B; keeps given = "
+          "every given box keeps its given label; given boxes = A = every given box is labelled A; C kept = C "
+          "stays on at least one given box (CF only).\n")
+    print("| model | split | order | condition | n answered | writes all 5 | keeps given | given boxes = A | C kept |")
+    print("|---|---|---|---|---|---|---|---|---|")
+    for r in rows:
+        c = rq1.pct(r["anyC"]) if r["condition"].startswith("CF") else "-"
+        print(f"| {r['model']} | {r['split']} | {r['order']} | {r['condition']} | {r['n']} | {rq1.pct(r['all5'])} | "
+              f"{rq1.pct(r['keep'])} | {rq1.pct(r['asA'])} | {c} |")
+    print()
+
+
+def cf_sim_tests(data):
+    """C near / far (--cf-class) against the random C of the core CF probe, and far against near, on the
+    same images: B labelled C and B labelled A, exact McNemar, Holm per model and outcome."""
+    rows = []
+    pairs = [("CF", "CF near"), ("CF", "CF far"), ("CF near", "CF far")]
+    for m in sorted({k[0] for k in data}):
+        for sp in rq1.SPLITS:
+            for oname, subs in ORDERS:
+                if oname == CONTROL:
+                    continue
+                for x, y in pairs:
+                    cx, cy = cell(data, m, x, sp, subs), cell(data, m, y, sp, subs)
+                    if not cx or not cy:
+                        continue
+                    rows.append(dict(model=m, split=rq1.SPLIT_NAME[sp], order=oname, x=x, y=y,
+                                     n=len(set(cx) & set(cy)), C=paired(cx, cy, "t", "C"), A=paired(cx, cy, "t", "A")))
+    for m in {r["model"] for r in rows}:
+        for what in ("C", "A"):
+            rs = [r for r in rows if r["model"] == m]
+            for r, a in zip(rs, rq1.holm([r[what]["p"] for r in rs])):
+                r[what]["holm"] = a
+    return rows
+
+
+def print_cf_sim(rows):
+    print("## C near / far: does a C closer to A get copied more?\n")
+    print("Paired on the same images, y - x in points, tolerant; B=C = B given the injected class of that "
+          "condition. Exact McNemar, Holm per model and outcome over these comparisons.\n")
+    print("| model | split | order | x | y | n img | B=C y - x [CI] | p (Holm) | B=A y - x [CI] | p (Holm) |")
+    print("|---|---|---|---|---|---|---|---|---|---|")
+    for r in rows:
+        cd, cp = cmp_s(r["C"])
+        ad, ap = cmp_s(r["A"])
+        print(f"| {r['model']} | {r['split']} | {r['order']} | {r['x']} | {r['y']} | {r['n']} | {cd} | {cp} | {ad} | {ap} |")
     print()
 
 
@@ -571,6 +665,12 @@ def main(argv=None):
     ap = after_prefill(data)
     if ap:
         print_after_prefill(ap)
+    gt = given_table(data)
+    if gt:
+        print_given_table(gt)
+    cs = cf_sim_tests(data)
+    if cs:
+        print_cf_sim(cs)
     series = dose(data)
     if series:
         print_dose(series)
