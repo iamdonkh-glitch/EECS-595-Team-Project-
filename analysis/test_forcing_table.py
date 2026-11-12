@@ -167,6 +167,20 @@ def test_assistant_prefill(tmp_path, capsys):
     assert "| m | Unseen | AAAAB | TF one-shot, assistant | 5 | 1 |" in capsys.readouterr().out
 
 
+def test_asked_label_reads_a_continued_prompt():
+    from rope_runner.data import candidates
+    cands = candidates("validation", "ADE")
+    # BAAAA with two labels given: the prompt ends "obj2: door, obj3: door, obj1:" and the model goes on
+    assert ft.asked_label(f"{B}, obj4: {A}, obj5: cabinet", 1, cands) == (B, 1)
+    assert ft.asked_label(f"obj1: {B}, obj2: {A}", 1, cands) == (B, 0)       # explicit key wins
+    assert ft.asked_label(f"obj2: {A}, obj1: {B}, obj1: {A}", 1, cands) == (A, 0)  # last mention
+    assert ft.asked_label(B, 5, cands) == (B, 0)                                # bare answer
+    assert ft.asked_label(f"Let me see, obj2: {A}", 1, cands) == (None, 0)     # no class before objK:
+    r = row("teacher_forcing", "BAAAA", 0, None, tf_mode="oneshot", n_given=2, answer=f"{B}, obj4: {A}, obj5: {A}")
+    rec = ft.b_record(r)
+    assert rec["lead"] == 1 and rec["t"]["ok"] == 1 and rec["s"]["ok"] == 0  # strict still needs obj1:
+
+
 def test_boot_depends_only_on_its_values():
     v = [0, 1, 1, 0, 1, 1, 0, 0, 1, 1]
     first = ft.boot(v)
@@ -228,7 +242,7 @@ def test_given_boxes_and_cf_sim(tmp_path, capsys):
     ft.print_given_table(ft.given_table(data))
     ft.print_cf_sim(ft.cf_sim_tests(data))
     out = capsys.readouterr().out
-    assert "| m | Unseen | AAAAB | CF | 2 | 100.0 | 0.0 | 50.0 | 50.0 |" in out
+    assert "| m | Unseen | AAAAB | CF | 2 | 0.0 | 100.0 | 0.0 | 50.0 | 50.0 |" in out
     assert "| m | Unseen | AAAAB | CF | CF near | 2 | +100.0" in out
 
 

@@ -50,7 +50,7 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, HERE)
 import rq1_table as rq1  # noqa: E402  (also puts harness/ on sys.path)
 from rope_runner.data import candidates  # noqa: E402
-from rope_runner.scoring import keyed_segment, prefill_labels, tolerant_multi  # noqa: E402
+from rope_runner.scoring import keyed_segment, prefill_labels, to_candidate, tolerant_multi  # noqa: E402
 
 ORDERS = [("Adversarial", ("AAAAB", "BAAAA")), ("AAAAB", ("AAAAB",)), ("BAAAA", ("BAAAA",)),
           ("Homogeneous control", ("homogenous",))]
@@ -104,10 +104,12 @@ def b_record(r):
     a_cls = gold[1] if b == 1 else gold[0]
     cf = r.get("counterfactual_class")
     tol, strict = r["tolerant_labels"][i], r["parsed_labels"][i]
+    rec = {}
     if len(objs) == 1:  # one-shot TF / counterfactual: read strict by key
         strict = keyed_segment(r["stripped_answer"][0], b)
+        if r.get("prefix_place", "user") == "user":
+            tol, rec["lead"] = asked_label(r["stripped_answer"][0], b, candidates(r["split"], r["data_source"]))
     out = lambda lab: {"ok": int(lab == gold[b - 1]), "A": int(lab == a_cls), "C": int(cf is not None and lab == cf)}
-    rec = {}
     if r.get("prefix_place", "user") == "assistant":
         # the label written right after the prefill; cut only when thinking never closed
         pl = prefill_labels(r["stripped_answer"][0], r["prefix_used"][0], b,
@@ -127,6 +129,27 @@ def b_record(r):
         if g:
             rec["g"] = g
     return rec
+
+
+_OBJ = re.compile(r"obj\s*\.?\s*([1-5])\s*[:：]", re.IGNORECASE)  # as rope_runner.scoring
+
+
+def asked_label(answer, b, cands):
+    """Tolerant label of the asked box b in a one-shot answer (labels in the user turn), and whether it
+    came from the text before the first objK:. The prompt ends in "objb:", and a model that continues
+    it may write b's label first and then the other boxes ("cabinet, obj4: cabinet, obj5: door");
+    rope_runner.scoring.tolerant_one returns None there because other boxes are named but not b.
+    Here an explicit "objb:" still wins (last mention); otherwise the first segment before the first
+    objK: is used when it names a candidate; with no objK: at all the whole answer is read, as before."""
+    found = tolerant_multi(answer, cands)
+    if b in found:
+        return found[b], 0
+    m = _OBJ.search(answer)
+    if m is None:
+        return (to_candidate(answer, cands) if answer.strip() else None), 0
+    head = re.split(r"[,;\n]", answer[:m.start()].strip(), maxsplit=1)[0]
+    lab = to_candidate(head, cands) if head.strip() else None
+    return (lab, 1) if lab in {c.lower() for c in cands} else (None, 0)
 
 
 _GIVEN = re.compile(r"obj(\d)\s*:\s*([^,]+),")
@@ -387,28 +410,34 @@ def given_table(data):
         for sp in rq1.SPLITS:
             for oname, subs in ORDERS:
                 for cond in conditions_of(data, m):
-                    recs = [r["g"] for r in cell(data, m, cond, sp, subs).values() if "g" in r]
-                    if not recs:
+                    answered = [r for r in cell(data, m, cond, sp, subs).values() if "lead" in r and not r["cut"]]
+                    if not answered:
                         continue
-                    row = dict(model=m, split=rq1.SPLIT_NAME[sp], order=oname, condition=cond, n=len(recs))
+                    recs = [r["g"] for r in answered if "g" in r]
+                    row = dict(model=m, split=rq1.SPLIT_NAME[sp], order=oname, condition=cond, n=len(answered),
+                               lead=float(np.mean([r["lead"] for r in answered])))
                     for what in ("all5", "keep", "asA", "anyC"):
-                        row[what] = float(np.mean([g[what] for g in recs]))
+                        row[what] = float(np.mean([g[what] for g in recs])) if recs else None
                     rows.append(row)
     return rows
 
 
 def print_given_table(rows):
     print("## What the answer does with the given boxes (one-shot, labels in the user turn; %)\n")
-    print("Over answered rows (calls for B not cut), tolerant parse, last objK: mention per box. writes all 5 = "
-          "a label for every box, i.e. the model rewrites the list instead of answering only B; keeps given = "
-          "every given box keeps its given label; given boxes = A = every given box is labelled A; C kept = C "
-          "stays on at least one given box (CF only).\n")
-    print("| model | split | order | condition | n answered | writes all 5 | keeps given | given boxes = A | C kept |")
-    print("|---|---|---|---|---|---|---|---|---|")
+    print("Over answered rows (calls for B not cut), tolerant parse, last objK: mention per box. B read before "
+          "objK: = the answer has no objK: for B but writes B's label first and then other boxes (it continues "
+          "the prompt's last \"objK:\"), and B's label was read from that first segment (see asked_label); "
+          "writes all 5 = a label for every box, i.e. the model rewrites the list instead of answering only B; "
+          "keeps given = every given box keeps its given label; given boxes = A = every given box is labelled A; "
+          "C kept = C stays on at least one given box (CF only). '-' = no label given (n = 0).\n")
+    print("| model | split | order | condition | n answered | B read before objK: | writes all 5 | keeps given | "
+          "given boxes = A | C kept |")
+    print("|---|---|---|---|---|---|---|---|---|---|")
     for r in rows:
-        c = rq1.pct(r["anyC"]) if r["condition"].startswith("CF") else "-"
-        print(f"| {r['model']} | {r['split']} | {r['order']} | {r['condition']} | {r['n']} | {rq1.pct(r['all5'])} | "
-              f"{rq1.pct(r['keep'])} | {rq1.pct(r['asA'])} | {c} |")
+        p = lambda k: "-" if r[k] is None else rq1.pct(r[k])
+        c = p("anyC") if r["condition"].startswith("CF") else "-"
+        print(f"| {r['model']} | {r['split']} | {r['order']} | {r['condition']} | {r['n']} | {rq1.pct(r['lead'])} | "
+              f"{p('all5')} | {p('keep')} | {p('asA')} | {c} |")
     print()
 
 
