@@ -327,7 +327,7 @@ For the placement files, "at the limit" counts both calls whose thinking never c
 
 ### How the finer runs were made
 
-The settings are the same as for the core runs (A40, vLLM 0.11.0, revision `ec4ebdc…`, `max_tokens` 8192, greedy, `--chunk 128`). The code is branch `rq2/forcing-probes`: commit `d1b7996` for dose and Homogeneous, and `25a0244` for placement (it gives the answer after the prefill the rest of the token budget).
+The settings are the same as for the core runs (A40, vLLM 0.11.0, revision `ec4ebdc…`, `max_tokens` 8192, greedy, `--chunk 128`), with one exception. `run.sbatch` allows both `spgpu` (A40) and `gpu-rtx6000`, and Slurm placed job 65920347 (placement, Unseen) on an NVIDIA RTX PRO 6000 Blackwell. That job ran with `max_model_len` 32768 instead of 12288; this does not change a call, which has about 2,400 prompt tokens and at most 8,192 new ones. Greedy decoding on different GPUs is not guaranteed to give identical text. All later jobs are pinned to A40 (`-p spgpu`). The code is branch `rq2/forcing-probes`: commit `d1b7996` for dose and Homogeneous, and `25a0244` for placement (it gives the answer after the prefill the rest of the token budget).
 
 | job | run | split | code | elapsed |
 |---|---|---|---|---|
