@@ -20,8 +20,9 @@ DIR/forcing_fig4_tests.csv (each dose against given=0, and the per-image slope o
 
 Conventions (as analysis/rq1_table.py): tolerant parse primary, strict beside it; a call with
 finish_reason == 'length' makes B wrong (and neither A nor C), kept in the denominator. CIs are 95%
-percentile bootstraps over images (2,000 reps). Paired tests against default on the same images:
-exact McNemar on B correct (and on B labelled A); Holm over all comparisons of one model, per outcome.
+percentile bootstraps over images (2,000 reps). Paired tests against default, and separately against
+single (B asked alone), on the same images: exact McNemar on B correct (and on B labelled A); Holm over
+all comparisons of one model with that reference, per outcome.
 Strict labels of one-shot TF and counterfactual rows are re-read from the answer with
 rope_runner.scoring.keyed_segment (the segment keyed objK), whatever scorer wrote the row.
 Assistant-turn prefill rows are read with rope_runner.scoring.prefill_labels: Table 4 uses the label
@@ -169,6 +170,7 @@ def table4(data):
                                                 if c not in ("default", "single")):
                     continue
                 base = cell(data, m, "default", sp, subs)
+                alone = cell(data, m, "single", sp, subs)
                 for cond in conditions_of(data, m):
                     g = cell(data, m, cond, sp, subs)
                     if not g:
@@ -189,10 +191,15 @@ def table4(data):
                         if oname != CONTROL:
                             row["vs_A"] = paired(base, g, "t", "A")
                             row["vs_A_uncut"] = paired(bu, gu, "t", "A")
+                    if cond != "single" and alone:
+                        # against B asked alone (the proposal's reference for inertia from context)
+                        row["vs1_ok"] = paired(alone, g, "t", "ok")
+                        if oname != CONTROL:
+                            row["vs1_A"] = paired(alone, g, "t", "A")
                     rows.append(row)
-    # Holm: per model, over its comparisons with default, per outcome
+    # Holm: per model, over its comparisons with default (or with single), per outcome
     for m in {r["model"] for r in rows}:
-        for key in ("vs_ok", "vs_A", "vs_ok_s", "vs_ok_uncut", "vs_A_uncut"):
+        for key in ("vs_ok", "vs_A", "vs_ok_s", "vs_ok_uncut", "vs_A_uncut", "vs1_ok", "vs1_A"):
             rs = [r for r in rows if r["model"] == m and r.get(key)]
             for r, a in zip(rs, rq1.holm([r[key]["p"] for r in rs])):
                 r[key]["holm"] = a
@@ -246,6 +253,25 @@ def print_uncut(rows):
     print()
 
 
+def print_vs_single(rows):
+    """Table 4 against Single-object: B asked alone, with no other answer or label in context."""
+    rows = [r for r in rows if r.get("vs1_ok")]
+    if not rows:
+        return
+    print("## Table 4, against Single-object (B asked alone)\n")
+    print("Same images, tolerant, y - x in points, exact McNemar, Holm over the model's comparisons with "
+          "Single-object. Single-object asks one box per turn with the official single-object prompt, so this "
+          "gap holds both the multi-object format (default) and the given labels.\n")
+    print("| model | split | order | condition | n img | acc vs single [CI] | p (Holm) | B=A vs single [CI] | p (Holm) |")
+    print("|---|---|---|---|---|---|---|---|---|")
+    for r in rows:
+        acc_d, acc_p = cmp_s(r["vs1_ok"])
+        a_d, a_p = cmp_s(r.get("vs1_A"))
+        print(f"| {r['model']} | {r['split']} | {r['order']} | {r['condition']} | {r['vs1_ok']['n']} | "
+              f"{acc_d} | {acc_p} | {a_d} | {a_p} |")
+    print()
+
+
 def after_prefill(data):
     """Assistant-turn prefill conditions: what the model does after writing the forced line."""
     rows = []
@@ -295,7 +321,9 @@ def write_csv(rows, path):
     cols += ["acc_vs_default", "acc_vs_default_lo", "acc_vs_default_hi", "acc_vs_default_p", "acc_vs_default_holm",
              "A_vs_default", "A_vs_default_p", "A_vs_default_holm",
              "n_uncut", "acc_vs_default_uncut", "acc_vs_default_uncut_p", "acc_vs_default_uncut_holm",
-             "A_vs_default_uncut", "A_vs_default_uncut_p", "A_vs_default_uncut_holm"]
+             "A_vs_default_uncut", "A_vs_default_uncut_p", "A_vs_default_uncut_holm",
+             "acc_vs_single", "acc_vs_single_lo", "acc_vs_single_hi", "acc_vs_single_p", "acc_vs_single_holm",
+             "A_vs_single", "A_vs_single_lo", "A_vs_single_hi", "A_vs_single_p", "A_vs_single_holm"]
     with open(path, "w", newline="") as f:
         w = csv.writer(f)
         w.writerow(cols)
@@ -313,6 +341,11 @@ def write_csv(rows, path):
                      acc_vs_default_uncut_p=vu and vu["p"], acc_vs_default_uncut_holm=vu and vu["holm"],
                      A_vs_default_uncut=au and au["diff"], A_vs_default_uncut_p=au and au["p"],
                      A_vs_default_uncut_holm=au and au["holm"])
+            for what, key in (("acc", "vs1_ok"), ("A", "vs1_A")):
+                v = r.get(key)
+                d.update({f"{what}_vs_single": v and v["diff"], f"{what}_vs_single_lo": v and v["ci"][0],
+                          f"{what}_vs_single_hi": v and v["ci"][1], f"{what}_vs_single_p": v and v["p"],
+                          f"{what}_vs_single_holm": v and v["holm"]})
             w.writerow([round(d[c], 6) if isinstance(d[c], float) else ("" if d[c] is None else d[c]) for c in cols])
 
 
@@ -504,6 +537,7 @@ def main(argv=None):
     rows = table4(data)
     print_table4(rows)
     print_uncut(rows)
+    print_vs_single(rows)
     write_csv(rows, os.path.join(out_dir, "forcing_table4.csv"))
     ap = after_prefill(data)
     if ap:

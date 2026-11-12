@@ -66,6 +66,10 @@ def test_forcing_table(tmp_path, capsys):
     assert t4[("Adversarial", "TF one-shot")]["n_images"] == 3
     assert t4[("Adversarial", "TF one-shot")]["ok_s"] == 1 / 3
     assert t4[("AAAAB", "TF incremental")]["A_t"] == 1
+    # against single: B right alone on img0 and img1, labelled A under TF one-shot on both
+    v1 = tf["vs1_A"]
+    assert (v1["n"], v1["b"], v1["c"], tf["vs1_ok"]["b"]) == (2, 0, 2, 2)
+    assert "vs1_ok" not in t4[("AAAAB", "single")] and t4[("AAAAB", "default")]["vs1_ok"]["n"] == 2
 
     series = {(s["probe"], s["order"]): s for s in ft.dose(data) if s["split"] == "validation"}
     pts = {q["n"]: q for q in series[("TF one-shot", "Adversarial")]["pts"]}
@@ -98,8 +102,11 @@ def test_forcing_table(tmp_path, capsys):
     assert g0["vs_ok"]["n"] == 2 and g0["vs_ok_uncut"]["n"] == 1 and g0["vs_A_uncut"]["n"] == 1
     ft.print_uncut(ft.table4(data))
     assert "| m | Unseen | AAAAB | TF one-shot, given=0 | 1 |" in capsys.readouterr().out
+    ft.print_vs_single(ft.table4(data))
+    assert "| m | Unseen | AAAAB | TF one-shot | 2 | -100.0 " in capsys.readouterr().out
     ft.write_csv(ft.table4(data), str(tmp_path / "t4.csv"))
-    assert "A_vs_default_uncut_holm" in (tmp_path / "t4.csv").read_text().splitlines()[0]
+    head = (tmp_path / "t4.csv").read_text().splitlines()[0]
+    assert "A_vs_default_uncut_holm" in head and head.endswith("A_vs_single_p,A_vs_single_holm")
 
 
 def test_slope_test():
