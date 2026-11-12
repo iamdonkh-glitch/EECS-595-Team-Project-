@@ -1,0 +1,99 @@
+% Forcing-probe section (RQ2), Xingjian Liu. DRAFT, 2026-11-11: only MiMo-VL-7B-RL is in.
+% Numbers marked \tbd wait for the other three models; MiMo-RL numbers are Unseen unless stated and
+% come from results/mimo-rl-2508/ (data branch xingjian/mimo-rl-results) via analysis/forcing_table.py.
+% Needs \usepackage{xcolor,booktabs,graphicx} and the proposal's references.bib.
+\providecommand{\tbd}{\textcolor{red}{TBD}}
+
+\section{Forcing probes: what the earlier labels do to B}
+\label{sec:forcing}
+
+RQ1 shows that B is named less often when all five objects are asked together than when it is asked
+alone. The forcing probes ask whether that gap comes from the labels of the other four objects. They
+replace the model's own earlier answers with labels we choose and measure what happens to B.
+
+\paragraph{Probes.} All probes use the 502 Adversarial images in both orders (Seen 168, Unseen 334 per
+order), the official multi-object prompt and greedy decoding. \emph{Incremental teacher forcing} is
+ROPE's official procedure: five calls, where call $k$ states the true labels of objects $1,\dots,k-1$
+and asks object $k$. In AAAAB, B is asked last, after four true A labels; in BAAAA it is asked first
+with nothing given, so BAAAA is the order control. \emph{One-shot teacher forcing} makes a single call
+that states the true labels of the four other objects and then asks B (in BAAAA it lists objects 2--5
+and asks object 1 last), so the labels always come before the question in the text. The
+\emph{counterfactual prefix} (CF) is the one-shot call with all four given labels replaced by one wrong
+class C that is not in the image, drawn per image with a fixed seed. Four variants refine the one-shot
+probe. \emph{Dose}: give only the first $n\in\{0,\dots,3\}$ of the four labels; $n=0$ keeps the
+multi-object prompt and its \texttt{obj5:} cue, so comparing with $n=0$ isolates the labels.
+\emph{Placement}: write the labels as the start of the model's own answer (after its reasoning)
+instead of into the user turn. \emph{C near / far}: choose as C the remaining candidate whose name is
+most or least similar to A (cosine of all-mpnet-base-v2 name embeddings; mean similarity to A is 0.49
+for near, 0.27 for random and 0.13 for far). \emph{Homogeneous control}: one-shot teacher forcing on
+Homogeneous items, where all five objects share a class and following the labels is correct.
+
+\paragraph{Measures.} For each B we record whether it is named correctly, labelled A (inertia) or
+labelled C. We follow the shared protocol: the tolerant parser is primary, a call that reaches the
+token limit counts as wrong, every comparison is paired on the same images with an exact McNemar test
+and a bootstrap 95\% CI, and $p$-values are Holm-adjusted over all comparisons of one model with the
+same reference. Because a cut call can never be A, we repeat each comparison on the images where
+neither call was cut. For the dose series we also report the per-image least-squares slope of B=A over
+$n$, with a permutation test that shuffles $n$ within each image.
+
+\begin{table*}[t]
+\centering\small
+\begin{tabular}{l rr rr rr rr}
+\toprule
+& \multicolumn{2}{c}{MiMo-SFT} & \multicolumn{2}{c}{MiMo-RL} & \multicolumn{2}{c}{Qwen-Instruct} & \multicolumn{2}{c}{Qwen-Thinking} \\
+Condition & AAAAB & BAAAA & AAAAB & BAAAA & AAAAB & BAAAA & AAAAB & BAAAA \\
+\midrule
+Single-object            & \tbd & \tbd & 18.9 & 24.0 & \tbd & \tbd & \tbd & \tbd \\
+Default                  & \tbd & \tbd & 29.3 & 32.6 & \tbd & \tbd & \tbd & \tbd \\
+TF incremental           & \tbd & \tbd & 40.7$^{*}$ & 33.2 & \tbd & \tbd & \tbd & \tbd \\
+TF one-shot              & \tbd & \tbd & 42.5$^{*}$ & 35.3 & \tbd & \tbd & \tbd & \tbd \\
+CF (B labelled A)        & \tbd & \tbd & 35.6$^{*}$ & 35.3 & \tbd & \tbd & \tbd & \tbd \\
+CF (B labelled C)        & \tbd & \tbd & 0.3 & 0.6 & \tbd & \tbd & \tbd & \tbd \\
+\bottomrule
+\end{tabular}
+\caption{B labelled A (\%) on Unseen Adversarial items under each probe (tolerant parser; the CF row
+below gives B labelled C). $^{*}$: differs from Default, Holm-adjusted $p<0.05$ (exact McNemar,
+paired). For MiMo-RL, B=A under Default and every forcing probe differs from Single-object at Holm
+$p<0.001$. Seen, accuracy and strict scores:
+Appendix~\tbd.}
+\label{tab:forcing}
+\end{table*}
+
+\paragraph{Correct labels pull B toward A when B is box 5.} On MiMo-RL, stating the four true A labels
+raises B=A on AAAAB from 29.3\% (Default) to 42.5\% (one-shot; $+13.2$ points, Holm $p<10^{-5}$) and
+to 40.7\% (incremental; $+11.4$), against 18.9\% when B is asked alone (Table~\ref{tab:forcing}). The
+rise holds on images where no call was cut ($+11.4$). Accuracy on B falls by 4.8 points, which is not
+significant after correction. The effect grows with the number of labels given
+(Figure~\ref{fig:dose}): B=A rises by 2.6 points per label (95\% CI 1.7--3.6, permutation $p<0.001$),
+from 32.9\% with none to 42.5\% with all four; $n=0$ does not differ significantly from Default
+($+3.6$). \tbd{} (other models; RL vs
+SFT and Thinking vs Instruct.)
+
+\paragraph{When B is box 1, the same labels barely matter.} In BAAAA the one-shot prompt also lists
+the four A labels before asking B, yet B=A rises only 2.7 points (not significant) and the dose slope
+is 0.8 points per label ($p=0.05$). The text order of labels and question is the same in both
+orders, so the pull depends on where B sits among the boxes. The model's answers suggest why: in
+99.7--100\% of answered rows it rewrites all five labels in box order rather than continuing from the
+given ones, so in AAAAB it writes A four times just before B, and in BAAAA it writes B first.
+
+\paragraph{The model rejects a wrong class but still drifts to A.} Under CF, MiMo-RL almost never
+copies C: B is labelled C in 0.3--1.2\% of items, and C survives on any of the four given boxes in
+under 2\% of answers. Instead the model relabels those boxes, mostly as A (64.1\% Unseen, 74.1\% Seen
+of answers). B=A still rises on AAAAB ($+6.3$, Holm $p=0.03$). Here the A labels before B are the
+model's own, which is the self-induced part of RQ2. CF also changes the question (B is asked after
+four given labels), so this probe alone does not separate the two causes. C near / far: \tbd.
+
+\paragraph{Following labels helps when they are right.} On Homogeneous items, the same one-shot probe
+raises accuracy on box 5 from 80.4\% to 86.9\% ($+6.5$, Holm $p<10^{-3}$). The labels are not
+ignored; the model leans on them whether or not the object matches.
+
+\paragraph{Placement.} \tbd{} (labels prefilled as the model's own answer; MiMo-RL often writes the
+forced label and then re-checks it).
+
+\begin{figure}[t]
+\centering
+\includegraphics[width=\columnwidth]{figures/forcing_fig4_dose.png}
+\caption{B labelled A and B named correctly against the number of true A labels given before B
+(one-shot teacher forcing; 95\% bootstrap CIs). Solid: Unseen; dashed: Seen.}
+\label{fig:dose}
+\end{figure}
