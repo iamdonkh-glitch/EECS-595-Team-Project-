@@ -81,7 +81,7 @@ well: its dose slope on AAAAB is 2.7 points per label. Qwen-Thinking: \tbd.
 
 \paragraph{When B is box 1, the same labels barely matter.} In BAAAA the one-shot prompt also lists
 the four A labels before asking B, yet B=A rises only 2.7 points (not significant) and the dose slope
-is 0.8 points per label ($p=0.05$). The text order of labels and question is the same in both
+is 0.8 points per label (Holm $p=0.10$). The text order of labels and question is the same in both
 orders, so the pull depends on where B sits among the boxes. The model's answers suggest why: in
 99.7--100\% of answered rows it rewrites all five labels in box order rather than continuing from the
 given ones, so in AAAAB it writes A four times just before B, and in BAAAA it writes B first.

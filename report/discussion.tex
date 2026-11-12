@@ -1,0 +1,75 @@
+% Discussion, Xingjian Liu. DRAFT, 2026-11-12: written from the forcing probes of MiMo-SFT, MiMo-RL and
+% Qwen-Instruct and the RQ1 runs of MiMo-RL and Qwen-Instruct. \tbd marks what waits on Qwen-Thinking,
+% MiMo-SFT's RQ1 run and the teammates' sections (RQ1 accuracy, budget sweep, error taxonomy).
+% Numbers are Unseen Adversarial unless stated; they come from results/<model>/forcing_tables.md and
+% results/<model>/box_swap.md on the data branch rq2/forcing-results.
+% Needs xcolor (for \tbd) and the proposal's references.bib.
+\providecommand{\tbd}{\textcolor{red}{TBD}}
+
+\section{Discussion}
+\label{sec:discussion}
+
+\paragraph{The labels that pull B are the ones the model writes just before it.} Across the three
+models we can compare so far, B is drawn toward A by the labels that come before it in the model's own
+output, not by where B sits in the prompt. Qwen-Instruct answers without reasoning, one label after
+another. Asking all five objects at once raises its B=A over Single-object by 15.9 points when B is
+the last box (AAAAB, Holm $p<10^{-11}$), but only by 2.4 points, not significant, when B is the first
+(BAAAA). Given labels pull it in both orders (Section~\ref{sec:forcing}) because it continues from
+them, so in both orders A labels end up directly before B. The MiMo models instead rewrite all five
+labels in box order, and given labels pull them only in AAAAB, where that rewrite puts four A labels
+before B. Inertia in this task is therefore tied to the order of generation, which fits the lower
+B=A of Single-object querying, where each box is answered with nothing written before it.
+
+\paragraph{In a reasoning model, the earlier labels include the reasoning.} MiMo-RL breaks the
+order rule in one place. Under Default its B=A also rises in BAAAA (by 8.7 points over Single-object,
+Holm $p=0.001$; Seen: $+1.8$, not significant), although B is the first label of its answer. Its
+reasoning, however, goes over all five boxes before the answer is written. Part of this rise is box
+confusion. In 12 of the 43 images where B turns into A under Default, the answer names B's class but
+writes it on one of the A boxes. We read these 12 reasoning traces: all of them name B's class, and
+in 9 the model numbers the boxes in the order it scans them (often from the left) instead of by the
+tags drawn in the image. Without these images the rise is 5.1 points. Box confusion does not
+explain the forcing effects, though: B's class is written on an A box in 9\% of MiMo-RL's B=A
+answers under one-shot teacher forcing on AAAAB, against 12\% under Default. The placement probe also
+points at the reasoning. On AAAAB, true labels written at the start of MiMo-RL's answer, after its
+reasoning, leave B=A at the Default level ($+3.3$ points, not significant), while the same labels
+placed before the reasoning raise it by 13.2. For a reasoning model, then, the place to look for
+self-induced inertia is the reasoning itself. Whether the reasoning names B correctly before the
+answer turns to A is the think--answer analysis of Section~\tbd. Qwen-Thinking will show whether the
+same holds in the other family (\tbd).
+
+\paragraph{RL adds a re-check, but the pull remains.} MiMo-SFT and MiMo-RL share their base model,
+so their differences come from RL training. Two things differ clearly. First, only MiMo-RL
+re-checks a wrong answer line: after four forced C labels it keeps writing in 62--76\% of items,
+typically ``Wait, no, that's wrong'' and a re-check, and by the end of the answer B is C in 8.4\% and
+26.0\% of items (AAAAB, BAAAA) instead of 36.8\% and 56.3\% at the first label. MiMo-SFT writes one label and stops (B labelled C in 79.0\% and
+86.5\%). This is far more self-correction than the under 10\% that \citet{zhu2026textualinertia}
+report for errors injected into the reasoning, probably because here the error contradicts reasoning
+the model has just finished. Second, the dose effect of true labels is about half as large after RL:
+2.6 points of B=A per label on AAAAB (95\% CI 1.7--3.6) against 5.0 (3.9--6.1) for MiMo-SFT, with
+non-overlapping intervals and the same pattern on Seen (2.1 against 5.1). The pull is there before
+RL, and RL makes the model less sensitive to the labels before B, not more. It does not remove the
+pull: four correct labels still raise MiMo-RL's B=A on AAAAB by 13.2 points over Default. Whether
+RL also changes inertia under Default needs MiMo-SFT's RQ1 run (\tbd), and RQ1 (Section~\tbd) gives
+the overall accuracy of the two versions.
+
+\paragraph{Rejecting a wrong label is not resisting inertia.} The proposal expected that methods
+which detect and repair errors would not help, because in Adversarial items the pull comes from
+correct labels. The counterfactual probe supports this. Both MiMo models reject a random wrong class
+given in the prompt: B is labelled C in at most 2.4\% of items, and C survives on a given box in
+under 5\% of answers. Instead they relabel those boxes themselves, mostly as A (64--74\% of answers),
+and B still drifts toward A (MiMo-RL on AAAAB: $+6.3$ points over Default). A wrong class close to A
+is accepted more often, but B=A does not change with it. Qwen-Instruct, without reasoning, follows
+the wrong class instead (B labelled C in 41.0\% of AAAAB items). Whether a model trusts the labels
+it is given and whether its own labels pull it are therefore separate properties, and the MiMo models
+control only the first. Reasoning VLMs follow misleading text cues placed beside the
+image~\citep{sanchezvillegas2026reasoning}; here the MiMo models reject the cue, and the drift comes
+from labels they wrote themselves.
+
+\paragraph{The pull is a consistency prior.} Following the labels is not a failure in itself. On
+Homogeneous items, where all five objects share a class, the same four labels raise accuracy on the
+fifth box by 6.5 points for MiMo-RL and 10.6 for Qwen-Instruct. The models treat neighbouring boxes
+as evidence about each other, which is often right in natural scenes and wrong exactly when one
+object differs. Our results suggest two kinds of fix, neither of which we tested beyond the
+Single-object baseline. At inference, asking each box separately removes the earlier labels, at five
+times the calls. In training, RQ4's per-object reward with an inertia penalty (Section~\tbd) targets
+the case our probes isolate, where the earlier labels are correct and B is not.

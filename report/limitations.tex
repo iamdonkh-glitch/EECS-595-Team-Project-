@@ -1,5 +1,5 @@
-% Limitations, Xingjian Liu. DRAFT, 2026-11-12: written from the MiMo-VL-7B-RL runs; the \tbd parts
-% wait for the other three models and the teammates' sections (budget curves, error taxonomy).
+% Limitations, Xingjian Liu. DRAFT, 2026-11-12: MiMo-SFT, MiMo-RL and Qwen-Instruct forcing runs done; the
+% \tbd parts wait for Qwen-Thinking, MiMo-SFT's RQ1 run and the teammates' sections.
 % Needs xcolor (for \tbd) and the proposal's references.bib.
 \providecommand{\tbd}{\textcolor{red}{TBD}}
 
@@ -15,7 +15,9 @@ of one-shot teacher-forcing calls). The shared protocol scores a cut call as wro
 can never be A, so the cut rate alone can shift a difference between conditions. We therefore repeat
 every comparison on the images where neither call was cut. The main effects keep their size there
 (e.g.\ $+11.4$ instead of $+13.2$ points of B=A for one-shot teacher forcing on AAAAB), but small
-differences in accuracy should be read with this in mind. \tbd{} (cut rates of the other models.)
+differences in accuracy should be read with this in mind. MiMo-SFT is cut in 1.3\% of one-shot
+teacher-forcing calls (at most 4.5\% in any forcing probe; its Default rate is \tbd), and
+Qwen-Instruct, which does not reason, almost never (5 of 3,340 incremental calls).
 
 \paragraph{The probes change more than the labels.} One-shot teacher forcing and the counterfactual
 prefix also change the question: B is asked after a list of given labels instead of inside one
@@ -23,7 +25,8 @@ five-object answer. The dose series compares against $n=0$, which keeps that for
 in the labels, but $n=0$ still differs from Default by its \texttt{obj5:} cue. The dose series also
 gives the labels in box order (objects $1,\dots,n$, or $2,\dots,n+1$ in BAAAA), so the number of
 labels and which boxes are labelled change together. Because MiMo-RL rewrites all five labels in its
-answer, the dose changes the labels in the prompt, not how many labels come before B in the answer. Under CF the wrong class and the new question
+answer, the dose changes the labels in the prompt, not how many labels come before B in the answer;
+for Qwen-Instruct, which continues from the given labels, it changes both. Under CF the wrong class and the new question
 come together, so CF alone does not show whether the drift to A comes from the model's own earlier
 labels or from the question.
 
@@ -35,11 +38,21 @@ starts its own list on a new line (4--13\% of MiMo-RL's answers with true labels
 counterfactual ones), that first label counts as wrong and not A, and we report the final label
 separately.
 
+\paragraph{What counts as B=A.} B=A is read from the label written for box B. When a model numbers
+the boxes in the order it scans them instead of by their tags, it can name B's class correctly and
+still write it on an A box. This happens in 12--18\% of MiMo-RL's B=A answers under Default on
+Unseen items and in 4--6\% of Qwen-Instruct's, against 9--11\% of MiMo-RL's under one-shot teacher
+forcing, so it raises the Default level of inertia more than the forcing effects. We tell such
+swaps apart from missed objects by the answer text alone, not by where the model looked.
+
 \paragraph{Parsing free text.} Labels are read with a tolerant parser that maps free text to the
 candidate list, and with ROPE's official strict parser. The two disagree often on MiMo-RL, which wraps answers
 in \texttt{\textbackslash boxed\{\}} and re-checks its answers in prose; we report both and checked
-48 core forcing rows by hand, in all of which the tolerant label matched the answer. \tbd{} (hand
-check of the finer probes and of the other models.)
+48 core forcing rows by hand, in all of which the tolerant label matched the answer. Qwen-Instruct
+often continues the prompt: after a prompt that ends in ``obj2: door, obj3: door, obj1:'' it answers
+``cabinet, obj4: cabinet, obj5: refrigerator''. The tolerant parser first read this as no label for B; in that case we read B from the text before the
+first \texttt{objK:}, which changes no MiMo number. A further 50 raw outputs per model, across all
+one-shot probes, were read by hand to check how each model uses the given labels.
 
 \paragraph{Sample size and scope.} Adversarial ROPE has 502 images (168 Seen and 334 Unseen per
 order). Several effects are significant on Unseen but not on the smaller Seen split, although they
