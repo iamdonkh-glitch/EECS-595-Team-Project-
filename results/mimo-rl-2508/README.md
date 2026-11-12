@@ -436,6 +436,29 @@ Paired on the same images, both orders pooled (section "C near / far" of `forcin
 
 **Note for the team.** A wrong class close to A is accepted more often (C kept on a given box in 8% of Unseen and 22% of Seen answers, against 0–2% for random or far C), but it is still rare, and the drift of B toward A is the same for all three. Against `default`, B=A on Unseen `AAAAB` rises under all three (random +6.3, near +8.4, far +9.6 points).
 
+### Box swaps inside B=A
+
+When B is labelled A, the answer sometimes still names B's class, but on one of the A boxes: the model saw B and put it on the wrong tag. `box_swap.md` counts this, from `analysis/box_swap.py` on branch `rq2/forcing-probes` (commit `d9225d5`, standard library only):
+
+```bash
+python analysis/box_swap.py results/mimo-rl-2508/rq1_mimo-rl-2508_adversarial_*.jsonl \
+  results/mimo-rl-2508/forcing_mimo-rl-2508_{tf-oneshot,cf}_*.jsonl \
+  results/mimo-rl-2508/forcing_cf{near,far}_mimo-rl-2508_*.jsonl > results/mimo-rl-2508/box_swap.md
+```
+
+It reads all five labels of each finished answer with the tolerant parser, so it covers Default and the one-shot probes with labels in the user turn (MiMo-RL rewrites the whole list there).
+
+| split | order | Default: B=A answers with B's class on an A box | TF one-shot | Default vs Single-object: B=A gain | gain without those answers |
+|---|---|---|---|---|---|
+| Unseen | AAAAB | 12 of 98 (12%) | 13 of 142 (9%) | +10.5 | +7.8 |
+| Unseen | BAAAA | 19 of 108 (18%) | 13 of 118 (11%) | +8.7 | +5.1 |
+| Seen | AAAAB | 3 of 35 (9%) | 0 of 48 (0%) | +8.3 | +7.1 |
+| Seen | BAAAA | 2 of 30 (7%) | 1 of 36 (3%) | +1.8 | +1.2 |
+
+`box_swap_check.jsonl` is a hand check of the 12 Unseen `BAAAA` images that count as "B turns into A under Default but not under Single-object" and write B's class on an A box. All 12 reasoning traces name B's class. In 9 the model numbers the boxes in the order it scans them ("the leftmost red box … the fifth red box") instead of by the tags drawn in the image; in 3 it reads the tags but matches them to the wrong boxes.
+
+**Note for the team.** Box swaps are a small part of inertia and do not carry the forcing effects (their share of B=A is lower under TF one-shot than under Default). They do explain part of why MiMo-RL's `default` B=A is above `single` even in `BAAAA`, where B is the first label it writes. An A box labelled with B's class is a "borrowed" error in the RQ3 taxonomy.
+
 ## Smoke run (before the full run)
 
 A smoke run is a test on a small sample of items. It checked the setup before the full run and showed what MiMo-RL's outputs look like. The file names start with `smoke_`, so `analysis/rq1_table.py` (which reads `rq1_*.jsonl`) does not pick them up. Do not use these numbers for Table 1.

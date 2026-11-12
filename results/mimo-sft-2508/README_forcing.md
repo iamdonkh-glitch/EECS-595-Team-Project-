@@ -20,6 +20,7 @@ Xingjian Liu's RQ2 forcing runs of MiMo-VL-7B-SFT-2508 on Adversarial ROPE (`AAA
 | `forcing_table4.csv` | Table 4 rates with CIs, one line per split x order x condition (no comparison with `default` yet) | 68 | | | |
 | `forcing_fig4_tests.csv`, `forcing_fig4_dose.png` | dose tests and Figure 4 for this model | | | | |
 | `forcing_output_check.jsonl` | hand check of 50 raw outputs: key, condition, automatic reading, verdict, note | 50 | | | |
+| `box_swap.md` | B=A answers that write B's class on an A box (`analysis/box_swap.py`, commit `d9225d5`; see the MiMo-VL-7B-RL README, section "Box swaps inside B=A") | | | | |
 
 **Integrity.** Every condition has exactly one row per ROPE entry in each subset (168 + 168 Seen and 334 + 334 Unseen Adversarial; 400 Seen and 490 Unseen Homogeneous), with no duplicate keys and no broken lines (`publish_forcing.py`).
 

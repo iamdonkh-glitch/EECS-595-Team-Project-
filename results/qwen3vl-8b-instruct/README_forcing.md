@@ -18,6 +18,7 @@ Xingjian Liu's RQ2 forcing runs of Qwen3-VL-8B-Instruct on Adversarial ROPE (`AA
 | `forcing_table4.csv` | Table 4 with CIs and p-values, one line per split x order x condition | | | | |
 | `forcing_fig4_tests.csv`, `forcing_fig4_dose.png` | dose tests and Figure 4 for this model | | | | |
 | `forcing_output_check.jsonl` | hand check of 50 raw outputs: key, condition, automatic reading, verdict, note | 50 | | | |
+| `box_swap.md` | B=A answers that write B's class on an A box (`analysis/box_swap.py`, commit `d9225d5`; see the MiMo-VL-7B-RL README, section "Box swaps inside B=A"). Rare for this model: 6% and 4% of its `default` B=A answers on Unseen `AAAAB` / `BAAAA`; the `default` vs `single` B=A gain goes from +15.9 to +14.4 and stays +2.4 without them. Its one-shot answers mostly continue the prompt instead of writing all five labels, so the forcing rows there are few. | | | | |
 
 **Integrity.** Every condition has exactly one row per ROPE entry in each subset (168 + 168 Seen and 334 + 334 Unseen Adversarial; 400 Seen and 490 Unseen Homogeneous), with no duplicate keys and no broken lines (`publish_forcing.py`). Five of the 3,340 Unseen incremental calls hit the 1,024-token limit, all of them call 1 (box 1: four in `AAAAB`, and one in `BAAAA`, where box 1 is B); no other call did.
 
