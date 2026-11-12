@@ -87,10 +87,18 @@ labels it changes at least one of them, and under CF it always replaces C with i
 
 \paragraph{The model rejects a wrong class but still drifts to A.} Under CF, MiMo-RL almost never
 copies C: B is labelled C in 0.3--1.2\% of items, and C survives on any of the four given boxes in
-under 2\% of answers. Instead the model relabels those boxes, mostly as A (64.1\% Unseen, 74.1\% Seen
+under 2\% of answers. Instead the model relabels those boxes, mostly as A (64.1\% Unseen, 74.5\% Seen
 of answers). B=A still rises on AAAAB ($+6.3$, Holm $p=0.04$). Here the A labels before B are the
 model's own, which is the self-induced part of RQ2. CF also changes the question (B is asked after
-four given labels), so this probe alone does not separate the two causes. C near / far: \tbd.
+four given labels), so this probe alone does not separate the two causes.
+
+\paragraph{A wrong class close to A is accepted more, but B drifts the same.} Choosing C by its
+similarity to A changes how often C is accepted. With the remaining class most similar to A as C,
+C survives on a given box in 8.1\% (Unseen) and 21.8\% (Seen) of answers, and B is labelled C 1.8
+and 3.9 points more often than with a random C (both orders; Holm $p=0.03$ and $0.07$). With the
+least similar class, both stay at the level of a random C. B=A does not differ significantly between
+near, random and far C. The drift of B toward A thus does not depend on how plausible the injected
+class is.
 
 \paragraph{Following labels helps when they are right.} On Homogeneous items, the same one-shot probe
 raises accuracy on box 5 from 80.4\% to 86.9\% ($+6.5$, Holm $p<10^{-3}$; Seen: 87.0\% to 96.0\%).
