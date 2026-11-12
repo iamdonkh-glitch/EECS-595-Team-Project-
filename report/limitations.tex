@@ -1,0 +1,48 @@
+% Limitations, Xingjian Liu. DRAFT, 2026-11-12: written from the MiMo-VL-7B-RL runs; the \tbd parts
+% wait for the other three models and the teammates' sections (budget curves, error taxonomy).
+% Needs xcolor (for \tbd) and the proposal's references.bib.
+\providecommand{\tbd}{\textcolor{red}{TBD}}
+
+\section*{Limitations}
+
+\paragraph{Greedy decoding, one run.} Every number comes from one greedy run per model and probe. We
+do not know how much the effects move under sampling, and a different decoding setup could change
+how often the thinking models loop.
+
+\paragraph{Token-limit cuts.} MiMo-VL-7B-RL reaches the 8,192-token limit in some calls, mostly by
+repeating itself while thinking (on Unseen Adversarial items, 8.5\% of Default calls for B and 4.5\%
+of one-shot teacher-forcing calls). The shared protocol scores a cut call as wrong, and a cut call
+can never be A, so the cut rate alone can shift a difference between conditions. We therefore repeat
+every comparison on the images where neither call was cut. The main effects keep their size there
+(e.g.\ $+11.4$ instead of $+13.2$ points of B=A for one-shot teacher forcing on AAAAB), but small
+differences in accuracy should be read with this in mind. \tbd{} (cut rates of the other models.)
+
+\paragraph{The probes change more than the labels.} One-shot teacher forcing and the counterfactual
+prefix also change the question: B is asked after a list of given labels instead of inside one
+five-object answer. The dose series compares against $n=0$, which keeps that format and differs only
+in the labels, but $n=0$ still differs from Default by its \texttt{obj5:} cue. The dose series also
+gives the labels in box order (objects $1,\dots,n$, or $2,\dots,n+1$ in BAAAA), so the number of
+labels and which boxes are labelled change together. Under CF the wrong class and the new question
+come together, so CF alone does not show whether the drift to A comes from the model's own earlier
+labels or from the question.
+
+\paragraph{Labels in the answer come after the reasoning.} The placement probe writes the labels at
+the start of the model's answer, after its reasoning has finished; we did not edit the reasoning
+itself. It therefore tests whether the answer line carries inertia, not whether labels inside the
+reasoning would. We score the first label written after the forced line. When the model instead
+starts its own list on a new line (4--13\% of MiMo-RL's answers with true labels, 28--50\% with
+counterfactual ones), that first label counts as wrong and not A, and we report the final label
+separately.
+
+\paragraph{Parsing free text.} Labels are read with a tolerant parser that maps free text to the
+candidate list, and with ROPE's official strict parser. The two disagree often on MiMo-RL, which wraps answers
+in \texttt{\textbackslash boxed\{\}} and re-checks its answers in prose; we report both and checked
+48 core forcing rows by hand, in all of which the tolerant label matched the answer. \tbd{} (hand
+check of the finer probes and of the other models.)
+
+\paragraph{Sample size and scope.} Adversarial ROPE has 502 images (168 Seen and 334 Unseen per
+order). Several effects are significant on Unseen but not on the smaller Seen split, although they
+point the same way. C near / far uses the similarity of class-name embeddings
+(all-mpnet-base-v2), not visual similarity, and takes A as the majority gold class. We study four
+7--8B models from two families on one benchmark, so the results may not hold for larger models,
+other families or other multi-object tasks. \tbd{}
