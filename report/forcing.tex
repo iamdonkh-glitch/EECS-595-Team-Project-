@@ -1,4 +1,4 @@
-% Forcing-probe section (RQ2), Xingjian Liu. DRAFT, 2026-11-11: only MiMo-VL-7B-RL is in.
+% Forcing-probe section (RQ2), Xingjian Liu. DRAFT, 2026-11-12: only MiMo-VL-7B-RL is in (C near/far pending).
 % Numbers marked \tbd wait for the other three models; MiMo-RL numbers are Unseen unless stated and
 % come from results/mimo-rl-2508/ (data branch xingjian/mimo-rl-results) via analysis/forcing_table.py.
 % Needs \usepackage{xcolor,booktabs,graphicx} and the proposal's references.bib.
@@ -49,11 +49,14 @@ TF incremental           & \tbd & \tbd & 40.7$^{*}$ & 33.2 & \tbd & \tbd & \tbd 
 TF one-shot              & \tbd & \tbd & 42.5$^{*}$ & 35.3 & \tbd & \tbd & \tbd & \tbd \\
 CF (B labelled A)        & \tbd & \tbd & 35.6$^{*}$ & 35.3 & \tbd & \tbd & \tbd & \tbd \\
 CF (B labelled C)        & \tbd & \tbd & 0.3 & 0.6 & \tbd & \tbd & \tbd & \tbd \\
+TF one-shot, in answer   & \tbd & \tbd & 32.6 & 36.8 & \tbd & \tbd & \tbd & \tbd \\
+CF in answer (B labelled C) & \tbd & \tbd & 36.8 & 56.3 & \tbd & \tbd & \tbd & \tbd \\
 \bottomrule
 \end{tabular}
-\caption{B labelled A (\%) on Unseen Adversarial items under each probe (tolerant parser; the CF row
-below gives B labelled C). $^{*}$: differs from Default, Holm-adjusted $p<0.05$ (exact McNemar,
-paired). For MiMo-RL, B=A under Default and every forcing probe differs from Single-object at Holm
+\caption{B labelled A (\%) on Unseen Adversarial items under each probe (tolerant parser; the two
+``B labelled C'' rows give B labelled C instead). ``In answer'': the given labels are written as the
+start of the model's answer; the label scored is the first one it writes for B. $^{*}$: differs from
+Default, Holm-adjusted $p<0.05$ (exact McNemar, paired). For MiMo-RL, B=A under Default and every forcing probe differs from Single-object at Holm
 $p<0.001$. Seen, accuracy and strict scores:
 Appendix~\tbd.}
 \label{tab:forcing}
@@ -66,8 +69,10 @@ rise holds on images where no call was cut ($+11.4$). Accuracy on B falls by 4.8
 significant after correction. The effect grows with the number of labels given
 (Figure~\ref{fig:dose}): B=A rises by 2.6 points per label (95\% CI 1.7--3.6, permutation $p<0.001$),
 from 32.9\% with none to 42.5\% with all four; $n=0$ does not differ significantly from Default
-($+3.6$). \tbd{} (other models; RL vs
-SFT and Thinking vs Instruct.)
+($+3.6$). On Seen items (168 per order) the direction is the same (AAAAB: 20.8\% to 28.6\%, $+7.7$)
+but not significant after correction, while the dose slope is ($+2.1$ points per label, Holm
+$p=0.001$).
+\tbd{} (other models; RL vs SFT and Thinking vs Instruct.)
 
 \paragraph{When B is box 1, the same labels barely matter.} In BAAAA the one-shot prompt also lists
 the four A labels before asking B, yet B=A rises only 2.7 points (not significant) and the dose slope
@@ -84,11 +89,22 @@ model's own, which is the self-induced part of RQ2. CF also changes the question
 four given labels), so this probe alone does not separate the two causes. C near / far: \tbd.
 
 \paragraph{Following labels helps when they are right.} On Homogeneous items, the same one-shot probe
-raises accuracy on box 5 from 80.4\% to 86.9\% ($+6.5$, Holm $p<10^{-3}$). The labels are not
-ignored; the model leans on them whether or not the object matches.
+raises accuracy on box 5 from 80.4\% to 86.9\% ($+6.5$, Holm $p<10^{-3}$; Seen: 87.0\% to 96.0\%).
+The labels are not ignored; the model leans on them whether or not the object matches.
 
-\paragraph{Placement.} \tbd{} (labels prefilled as the model's own answer; MiMo-RL often writes the
-forced label and then re-checks it).
+\paragraph{Labels written as the model's own answer.} When the same four true labels are written as
+the start of the model's answer, after its reasoning, MiMo-RL's first label for B on AAAAB is A in
+32.6\% of items: close to Default ($+3.3$ points, not significant) and well below the 42.5\% for the
+same labels in the user turn (BAAAA: 36.8\%, also not significant). The true labels thus pull B
+toward A mainly through the reasoning that follows them, not by being copied in the answer line.
+A wrong class behaves differently. After four forced C labels, the first label for B is C in 36.8\%
+(AAAAB) and 56.3\% (BAAAA) of items (Seen: 31.5\% and 48.8\%), against at most 1.2\% when the same
+labels are given in the user turn, and it is never A. Here the forced line contradicts the model's
+own reasoning, and the answer still continues it. The model often notices: it keeps writing after
+the label in 62--76\% of items, typically ``Wait, no, that's wrong'' and a re-check, and in
+28--40\% it starts its own five-label list on a new line. By the end of the answer, B is C in 8.4\%
+(AAAAB) and 26.0\% (BAAAA) of items. The answer text therefore carries an inertia of its own, which
+the model's re-check only partly undoes.
 
 \begin{figure}[t]
 \centering
