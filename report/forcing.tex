@@ -1,4 +1,4 @@
-% Forcing-probe section (RQ2), Xingjian Liu. DRAFT, 2026-11-12: only MiMo-VL-7B-RL is in (C near/far pending).
+% Forcing-probe section (RQ2), Xingjian Liu. DRAFT, 2026-11-12: MiMo-RL and Qwen-Instruct complete; MiMo-SFT without its RQ1 baseline; Qwen-Thinking running.
 % Numbers marked \tbd wait for the other three models; MiMo-RL numbers are Unseen unless stated and
 % come from results/mimo-rl-2508/ (data branch rq2/forcing-results) via analysis/forcing_table.py.
 % Needs \usepackage{xcolor,booktabs,graphicx} and the proposal's references.bib.
@@ -44,20 +44,21 @@ $n$, with a permutation test that shuffles $n$ within each image.
 & \multicolumn{2}{c}{MiMo-SFT} & \multicolumn{2}{c}{MiMo-RL} & \multicolumn{2}{c}{Qwen-Instruct} & \multicolumn{2}{c}{Qwen-Thinking} \\
 Condition & AAAAB & BAAAA & AAAAB & BAAAA & AAAAB & BAAAA & AAAAB & BAAAA \\
 \midrule
-Single-object            & \tbd & \tbd & 18.9 & 24.0 & \tbd & \tbd & \tbd & \tbd \\
-Default                  & \tbd & \tbd & 29.3 & 32.6 & \tbd & \tbd & \tbd & \tbd \\
-TF incremental           & \tbd & \tbd & 40.7$^{*}$ & 33.2 & \tbd & \tbd & \tbd & \tbd \\
-TF one-shot              & \tbd & \tbd & 42.5$^{*}$ & 35.3 & \tbd & \tbd & \tbd & \tbd \\
-CF (B labelled A)        & \tbd & \tbd & 35.6$^{*}$ & 35.3 & \tbd & \tbd & \tbd & \tbd \\
-CF (B labelled C)        & \tbd & \tbd & 0.3 & 0.6 & \tbd & \tbd & \tbd & \tbd \\
-TF one-shot, in answer   & \tbd & \tbd & 32.6 & 36.8 & \tbd & \tbd & \tbd & \tbd \\
-CF in answer (B labelled C) & \tbd & \tbd & 36.8 & 56.3 & \tbd & \tbd & \tbd & \tbd \\
+Single-object            & \tbd & \tbd & 18.9 & 24.0 & 20.1 & 22.8 & \tbd & \tbd \\
+Default                  & \tbd & \tbd & 29.3 & 32.6 & 35.9 & 25.1 & \tbd & \tbd \\
+TF incremental           & 51.2 & 32.9 & 40.7$^{*}$ & 33.2 & 41.0 & 25.4 & \tbd & \tbd \\
+TF one-shot              & 51.5 & 34.4 & 42.5$^{*}$ & 35.3 & 41.3 & 32.6$^{*}$ & \tbd & \tbd \\
+CF (B labelled A)        & 43.1 & 35.3 & 35.6$^{*}$ & 35.3 & 10.8$^{*}$ & 18.9$^{*}$ & \tbd & \tbd \\
+CF (B labelled C)        & 1.8 & 0.6 & 0.3 & 0.6 & 41.0 & 21.0 & \tbd & \tbd \\
+TF one-shot, in answer   & 49.1 & 40.1 & 32.6 & 36.8 & 47.6$^{*}$ & 44.9$^{*}$ & \tbd & \tbd \\
+CF in answer (B labelled C) & 79.0 & 86.5 & 36.8 & 56.3 & 83.5 & 83.2 & \tbd & \tbd \\
 \bottomrule
 \end{tabular}
 \caption{B labelled A (\%) on Unseen Adversarial items under each probe (tolerant parser; the two
 ``B labelled C'' rows give B labelled C instead). ``In answer'': the given labels are written as the
 start of the model's answer; the label scored is the first one it writes for B. $^{*}$: differs from
-Default, Holm-adjusted $p<0.05$ (exact McNemar, paired). For MiMo-RL, B=A under Default and every forcing probe differs from Single-object at Holm
+Default, Holm-adjusted $p<0.05$ (exact McNemar, paired). MiMo-SFT has no Default or Single-object
+run yet (RQ1, \tbd), so its rows carry no test. For MiMo-RL, B=A under Default and every forcing probe differs from Single-object at Holm
 $p<0.01$. Seen, accuracy and strict scores:
 Appendix~\tbd.}
 \label{tab:forcing}
@@ -73,7 +74,10 @@ from 32.9\% with none to 42.5\% with all four; $n=0$ does not differ significant
 ($+3.6$). On Seen items (168 per order) the direction is the same (AAAAB: 20.8\% to 28.6\%, $+7.7$)
 but not significant after correction, while the dose slope is ($+2.1$ points per label, Holm
 $p=0.001$).
-\tbd{} (other models; RL vs SFT and Thinking vs Instruct.)
+The pull is stronger in MiMo-SFT. Its dose slope on AAAAB is 5.0 points per label (Unseen; 5.1 on
+Seen), about twice MiMo-RL's, and B=A reaches 51.5\% with all four labels. Whether RL training weakens
+the pull or only moves the baseline needs MiMo-SFT's Default run (\tbd). Qwen-Instruct is pulled as
+well: its dose slope on AAAAB is 2.7 points per label. Qwen-Thinking: \tbd.
 
 \paragraph{When B is box 1, the same labels barely matter.} In BAAAA the one-shot prompt also lists
 the four A labels before asking B, yet B=A rises only 2.7 points (not significant) and the dose slope
@@ -84,13 +88,20 @@ given ones, so in AAAAB it writes A four times just before B, and in BAAAA it wr
 A hand check of 50 raw outputs agrees. All 34 with labels in the user turn rewrite the whole list:
 with fewer than four labels given the model labels the other boxes itself, in 6 of the 26 with true
 labels it changes at least one of them, and under CF it always replaces C with its own classes.
+MiMo-SFT answers the same way (all 34 rewrite the list). Qwen-Instruct does not. In 27 of 34 checked
+answers it continues from the given labels and writes B right after them. It is also pulled in
+BAAAA: one-shot teacher forcing raises B=A from 25.1\% to 32.6\% ($+7.5$, Holm $p<0.001$), and its
+dose slope there is 1.6 points per label ($p<0.001$). What matters is what the model has just written
+before B, not where B sits in the prompt.
 
 \paragraph{The model rejects a wrong class but still drifts to A.} Under CF, MiMo-RL almost never
 copies C: B is labelled C in 0.3--1.2\% of items, and C survives on any of the four given boxes in
 under 2\% of answers. Instead the model relabels those boxes, mostly as A (64.1\% Unseen, 74.5\% Seen
 of answers). B=A still rises on AAAAB ($+6.3$, Holm $p=0.04$). Here the A labels before B are the
 model's own, which is the self-induced part of RQ2. CF also changes the question (B is asked after
-four given labels), so this probe alone does not separate the two causes.
+four given labels), so this probe alone does not separate the two causes. MiMo-SFT behaves the same
+way (B labelled C in 0--2.4\% of items). Qwen-Instruct does not: it copies C onto B in 41.0\% of
+AAAAB and 21.0\% of BAAAA items, and B=A falls well below Default.
 
 \paragraph{A wrong class close to A is accepted more, but B drifts the same.} Choosing C by its
 similarity to A changes how often C is accepted. With the remaining class most similar to A as C,
@@ -101,7 +112,8 @@ near, random and far C. The drift of B toward A thus does not depend on how plau
 class is.
 
 \paragraph{Following labels helps when they are right.} On Homogeneous items, the same one-shot probe
-raises accuracy on box 5 from 80.4\% to 86.9\% ($+6.5$, Holm $p<10^{-3}$; Seen: 87.0\% to 96.0\%).
+raises accuracy on box 5 from 80.4\% to 86.9\% ($+6.5$, Holm $p<10^{-3}$; Seen: 87.0\% to 96.0\%),
+and Qwen-Instruct's from 85.3\% to 95.9\% ($+10.6$).
 The labels are not ignored; the model leans on them whether or not the object matches.
 
 \paragraph{Labels written as the model's own answer.} When the same four true labels are written as
@@ -116,7 +128,11 @@ own reasoning, and the answer still continues it. The model often notices: it ke
 the label in 62--76\% of items, typically ``Wait, no, that's wrong'' and a re-check, and in
 28--40\% it starts its own five-label list on a new line. By the end of the answer, B is C in 8.4\%
 (AAAAB) and 26.0\% (BAAAA) of items. The answer text therefore carries an inertia of its own, which
-the model's re-check only partly undoes.
+the model's re-check only partly undoes. MiMo-SFT and Qwen-Instruct never re-check: each writes one
+label after the forced line and stops. After four forced C labels, B is C in 79.0\% and 86.5\% of
+items for MiMo-SFT and 83.5\% and 83.2\% for Qwen-Instruct (AAAAB and BAAAA). Qwen-Instruct has no
+reasoning that could override the labels, so for it true labels in its own answer pull hardest: B=A
+rises by 11.7 and 19.8 points over Default.
 
 \begin{figure}[t]
 \centering
