@@ -80,6 +80,9 @@ is 0.8 points per label ($p=0.05$). The text order of labels and question is the
 orders, so the pull depends on where B sits among the boxes. The model's answers suggest why: in
 99.7--100\% of answered rows it rewrites all five labels in box order rather than continuing from the
 given ones, so in AAAAB it writes A four times just before B, and in BAAAA it writes B first.
+A hand check of 50 raw outputs agrees. All 34 with labels in the user turn rewrite the whole list:
+with fewer than four labels given the model labels the other boxes itself, in 6 of the 26 with true
+labels it changes at least one of them, and under CF it always replaces C with its own classes.
 
 \paragraph{The model rejects a wrong class but still drifts to A.} Under CF, MiMo-RL almost never
 copies C: B is labelled C in 0.3--1.2\% of items, and C survives on any of the four given boxes in
