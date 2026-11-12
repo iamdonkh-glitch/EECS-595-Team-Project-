@@ -15,7 +15,8 @@ ask) is compared the same way; there all five objects share one class, so follow
   python analysis/forcing_table.py [--out-dir DIR] [jsonl ...] > table4.md
   # default input: results/*/rq1_*.jsonl and results/*/forcing_*.jsonl; default DIR: results/
 
-Writes DIR/forcing_table4.csv and, when --n-given runs exist, DIR/forcing_fig4_dose.png.
+Writes DIR/forcing_table4.csv and, when --n-given runs exist, DIR/forcing_fig4_dose.png and
+DIR/forcing_fig4_tests.csv (each dose against given=0, and the per-image slope over labels given).
 
 Conventions (as analysis/rq1_table.py): tolerant parse primary, strict beside it; a call with
 finish_reason == 'length' makes B wrong (and neither A nor C), kept in the denominator. CIs are 95%
@@ -317,20 +318,111 @@ def write_csv(rows, path):
 
 # ------------------------------------------------------------------ Figure 4: dose-response
 def dose(data):
-    """Pooled Adversarial: per model, split, probe (TF / CF) and n given labels (0-4): B acc, B=A, B=C."""
+    """Per model, split, probe (TF / CF), order (pooled Adversarial, AAAAB, BAAAA) and n given labels
+    (0-4): B acc, B=A, B=C."""
     out = []
     for m in sorted({k[0] for k in data}):
         for sp in rq1.SPLITS:
             for probe in ("TF one-shot", "CF"):
-                pts = []
-                for n in range(5):
-                    cond = probe if n == 4 else f"{probe}, given={n}"
-                    recs = list(cell(data, m, cond, sp, ("AAAAB", "BAAAA")).values())
-                    if recs:
-                        pts.append(dict(n=n, n_img=len(recs), **{w: rate(recs, "t", w) for w in ("ok", "A", "C")}))
-                if len(pts) >= 2:
-                    out.append(dict(model=m, split=sp, probe=probe, pts=pts))
+                for oname, subs in ORDERS:
+                    if oname == CONTROL:
+                        continue
+                    pts = []
+                    for n in range(5):
+                        cond = probe if n == 4 else f"{probe}, given={n}"
+                        recs = list(cell(data, m, cond, sp, subs).values())
+                        if recs:
+                            pts.append(dict(n=n, n_img=len(recs), **{w: rate(recs, "t", w) for w in ("ok", "A", "C")}))
+                    if len(pts) >= 2:
+                        out.append(dict(model=m, split=sp, probe=probe, order=oname, pts=pts))
     return out
+
+
+def slope_test(x, y, reps=10000, seed=0):
+    """y: images x doses (0/1), x: the doses. Per-image least-squares slope of y over x; returns its
+    mean (per label given), a bootstrap CI over images, and a two-sided permutation p with the doses
+    shuffled within each image (under no dose effect an image's outcomes are exchangeable)."""
+    xc = x - x.mean()
+    ss = float(xc @ xc)
+    s = y @ xc / ss
+    obs = float(s.mean())
+    rng = np.random.default_rng(seed)
+    hits, done = 0, 0
+    while done < reps:
+        k = min(1000, reps - done)
+        perm = np.argsort(rng.random((k,) + y.shape), axis=2)
+        stat = (np.take_along_axis(np.broadcast_to(y, perm.shape), perm, axis=2) @ xc).mean(axis=1) / ss
+        hits += int(np.sum(np.abs(stat) >= abs(obs) - 1e-12))
+        done += k
+    return dict(n=len(s), diff=obs, ci=rq1.boot_mean(s), p=(hits + 1) / (reps + 1))
+
+
+def dose_tests(data):
+    """Tests for Figure 4, per model, split, probe and order (pooled, AAAAB, BAAAA), on the images that
+    have every dose point: each n labels given against given=0 (paired, exact McNemar), and the per-image
+    slope over n = 0-4 (points per label, permutation p). Holm per model and outcome, separately over the
+    against-0 comparisons and over the slopes. given=0 asks B alone with no labels, so it holds the prompt
+    format fixed and isolates the effect of the labels themselves."""
+    rows = []
+    for m in sorted({k[0] for k in data}):
+        for sp in rq1.SPLITS:
+            for probe in ("TF one-shot", "CF"):
+                for oname, subs in ORDERS:
+                    if oname == CONTROL:
+                        continue
+                    pts = {n: cell(data, m, probe if n == 4 else f"{probe}, given={n}", sp, subs) for n in range(5)}
+                    have = [n for n in range(5) if pts[n]]
+                    if 0 not in have or len(have) < 2:
+                        continue
+                    keys = sorted(set.intersection(*(set(pts[n]) for n in have)), key=str)
+                    row = dict(model=m, split=rq1.SPLIT_NAME[sp], probe=probe, order=oname, n_images=len(keys),
+                               doses=have)
+                    for what in ("A", "ok"):
+                        for n in have[1:]:
+                            row[f"vs0_{what}_{n}"] = paired({k: pts[0][k] for k in keys}, {k: pts[n][k] for k in keys},
+                                                            "t", what)
+                        y = np.array([[pts[n][k]["t"][what] for n in have] for k in keys], dtype=float)
+                        row[f"slope_{what}"] = slope_test(np.array(have, dtype=float), y)
+                    rows.append(row)
+    for m in {r["model"] for r in rows}:
+        for what in ("A", "ok"):
+            for fam in ([f"vs0_{what}_{n}" for n in range(1, 5)], [f"slope_{what}"]):
+                tests = [r[k] for r in rows if r["model"] == m for k in fam if r.get(k)]
+                for t, a in zip(tests, rq1.holm([t["p"] for t in tests])):
+                    t["holm"] = a
+    return rows
+
+
+def print_dose_tests(rows):
+    print("## Figure 4 tests: labels given against none\n")
+    print("Images with every dose point (tolerant). slope = per-image least-squares change per label given "
+          "(0-4), in points, permutation p (doses shuffled within image). 4 vs 0 = all four labels against "
+          "none, paired, exact McNemar. Holm per model and outcome.\n")
+    print("| model | split | probe | order | n img | B=A slope / label [CI] | p (Holm) | B=A 4 vs 0 [CI] | p (Holm) | "
+          "acc slope / label [CI] | p (Holm) | acc 4 vs 0 [CI] | p (Holm) |")
+    print("|---|---|---|---|---|---|---|---|---|---|---|---|---|")
+    for r in rows:
+        cells = []
+        for what in ("A", "ok"):
+            cells += cmp_s(r[f"slope_{what}"]) + cmp_s(r.get(f"vs0_{what}_4"))
+        print(f"| {r['model']} | {r['split']} | {r['probe']} | {r['order']} | {r['n_images']} | " + " | ".join(cells) + " |")
+    print()
+
+
+def write_dose_csv(rows, path):
+    cols = ["model", "split", "probe", "order", "n_images"]
+    tests = [f"slope_{w}" for w in ("A", "ok")] + [f"vs0_{w}_{n}" for w in ("A", "ok") for n in range(1, 5)]
+    for t in tests:
+        cols += [t, t + "_lo", t + "_hi", t + "_p", t + "_holm"]
+    with open(path, "w", newline="") as f:
+        w = csv.writer(f)
+        w.writerow(cols)
+        for r in rows:
+            vals = [r[c] for c in cols[:5]]
+            for t in tests:
+                v = r.get(t)
+                vals += [round(v["diff"], 6), round(v["ci"][0], 6), round(v["ci"][1], 6), v["p"], v["holm"]] if v else [""] * 5
+            w.writerow(vals)
 
 
 PLOT = r'''
@@ -339,47 +431,53 @@ import matplotlib
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 d = json.load(sys.stdin)
-panels = [("TF one-shot", "ok", "TF: B named correctly"), ("TF one-shot", "A", "TF: B labelled A (inertia)"),
-          ("CF", "C", "CF: B labelled C (copied)")]
-models = sorted(set(s["model"] for s in d["series"]))
+# rows: order; columns: outcome. Colour = model, solid = Unseen, dashed = Seen (shifted right a little).
+orders = [("AAAAB", "AAAAB (B in box 5)"), ("BAAAA", "BAAAA (B in box 1)")]
+cols = [("A", "B labelled A (inertia)"), ("ok", "B named correctly")]
+series = [s for s in d["series"] if s["probe"] == "TF one-shot"]
+models = sorted(set(s["model"] for s in series))
 colors = dict(zip(models, ["#1f77b4", "#d62728", "#2ca02c", "#9467bd"]))
-fig, axes = plt.subplots(2, 3, figsize=(12, 7), sharex=True, squeeze=False)
-for i, sp in enumerate(["train", "validation"]):
-    for j, (probe, what, title) in enumerate(panels):
+style = {"validation": ("-", "o", -0.06, "Unseen"), "train": ("--", "s", 0.06, "Seen")}
+fig, axes = plt.subplots(2, 2, figsize=(9, 7), sharex=True, squeeze=False)
+for i, (order, otitle) in enumerate(orders):
+    for j, (what, ctitle) in enumerate(cols):
         ax = axes[i][j]
-        for s in d["series"]:
-            if s["split"] != sp or s["probe"] != probe:
+        for s in series:
+            if s["order"] != order:
                 continue
-            x = [p["n"] for p in s["pts"]]
+            ls, mk, dx, sname = style[s["split"]]
+            x = [p["n"] + dx for p in s["pts"]]
             y = [100 * p[what][0] for p in s["pts"]]
             lo = [100 * (p[what][0] - p[what][1][0]) for p in s["pts"]]
             hi = [100 * (p[what][1][1] - p[what][0]) for p in s["pts"]]
-            ax.errorbar(x, y, yerr=[lo, hi], marker="o", capsize=3, color=colors[s["model"]], label=s["model"])
-        ax.set_title(title + " - " + {"train": "Seen", "validation": "Unseen"}[sp], fontsize=9)
+            ax.errorbar(x, y, yerr=[lo, hi], linestyle=ls, marker=mk, markersize=4, capsize=2, linewidth=1.3,
+                        color=colors[s["model"]], label=f"{s['model']}, {sname}")
+        ax.set_title(f"{otitle}: {ctitle}", fontsize=9)
         ax.set_xticks(range(5))
         ax.grid(alpha=0.3)
         if i == 1:
-            ax.set_xlabel("labels given before B (of 4)")
-    axes[i][0].set_ylabel("% of B objects (tolerant)")
+            ax.set_xlabel("true labels given before B (of the other 4)")
+    axes[i][0].set_ylabel("% of B objects (tolerant, 95% CI)")
 h, l = [], []
 for ax in axes.flat:
     for hh, ll in zip(*ax.get_legend_handles_labels()):
         if ll not in l:
             h.append(hh); l.append(ll)
 fig.legend(h, l, loc="lower center", ncol=4, fontsize=8)
-fig.tight_layout(rect=(0, 0.06, 1, 1))
+fig.tight_layout(rect=(0, 0.07, 1, 1))
 fig.savefig(d["out"], dpi=150)
 '''
 
 
 def print_dose(series):
-    print("## Figure 4 data: dose-response (pooled Adversarial, tolerant, %)\n")
-    print("| model | split | probe | labels given | n img | B acc [95% CI] | B=A [95% CI] | B=C [95% CI] |")
-    print("|---|---|---|---|---|---|---|---|")
+    print("## Figure 4 data: dose-response (tolerant, %)\n")
+    print("| model | split | probe | order | labels given | n img | B acc [95% CI] | B=A [95% CI] | B=C [95% CI] |")
+    print("|---|---|---|---|---|---|---|---|---|")
     for s in series:
         for p in s["pts"]:
             cells = " | ".join(f"{rq1.pct(p[w][0])} {rq1.ci_s(p[w][1])}" for w in ("ok", "A", "C"))
-            print(f"| {s['model']} | {rq1.SPLIT_NAME[s['split']]} | {s['probe']} | {p['n']} | {p['n_img']} | {cells} |")
+            print(f"| {s['model']} | {rq1.SPLIT_NAME[s['split']]} | {s['probe']} | {s['order']} | {p['n']} | "
+                  f"{p['n_img']} | {cells} |")
     print()
 
 
@@ -413,6 +511,9 @@ def main(argv=None):
     series = dose(data)
     if series:
         print_dose(series)
+        dt = dose_tests(data)
+        print_dose_tests(dt)
+        write_dose_csv(dt, os.path.join(out_dir, "forcing_fig4_tests.csv"))
         plot(series, os.path.join(out_dir, "forcing_fig4_dose.png"))
 
 

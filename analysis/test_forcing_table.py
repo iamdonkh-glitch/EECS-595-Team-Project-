@@ -67,10 +67,27 @@ def test_forcing_table(tmp_path, capsys):
     assert t4[("Adversarial", "TF one-shot")]["ok_s"] == 1 / 3
     assert t4[("AAAAB", "TF incremental")]["A_t"] == 1
 
-    series = {s["probe"]: s for s in ft.dose(data) if s["split"] == "validation"}
-    pts = {q["n"]: q for q in series["TF one-shot"]["pts"]}
+    series = {(s["probe"], s["order"]): s for s in ft.dose(data) if s["split"] == "validation"}
+    pts = {q["n"]: q for q in series[("TF one-shot", "Adversarial")]["pts"]}
     assert set(pts) == {0, 4} and pts[0]["ok"][0] == 0.5 and pts[4]["A"][0] == 2 / 3
-    assert "CF" not in series  # only one dose point
+    assert {q["n"] for q in series[("TF one-shot", "AAAAB")]["pts"]} == {0, 4}
+    assert ("TF one-shot", "BAAAA") not in series  # one dose point there
+    assert not [k for k in series if k[0] == "CF"]  # only one dose point
+    ft.plot(ft.dose(data), str(tmp_path / "fig.png"))
+    assert (tmp_path / "fig.png").stat().st_size > 0
+
+    # dose tests: AAAAB has given=0 and given=4 on img0 and img1; BAAAA has no given=0 run
+    dt = {r["order"]: r for r in ft.dose_tests(data) if r["split"] == "Unseen" and r["probe"] == "TF one-shot"}
+    assert set(dt) == {"Adversarial", "AAAAB"}
+    d = dt["AAAAB"]
+    # B=A: 0 -> 1 on both images (4 labels apart); acc: img0 1 -> 0, img1 0 (cut) -> 0
+    assert d["n_images"] == 2 and d["slope_A"]["diff"] == 0.25 and d["slope_ok"]["diff"] == -0.125
+    assert (d["vs0_A_4"]["b"], d["vs0_A_4"]["c"]) == (0, 2) and 0.4 < d["slope_A"]["p"] <= 1
+    assert dt["Adversarial"]["n_images"] == 2  # pooled keeps only images with every dose point
+    ft.print_dose_tests(ft.dose_tests(data))
+    assert "| m | Unseen | TF one-shot | AAAAB | 2 | +25.0 " in capsys.readouterr().out
+    ft.write_dose_csv(ft.dose_tests(data), str(tmp_path / "d.csv"))
+    assert (tmp_path / "d.csv").read_text().splitlines()[0].startswith("model,split,probe,order,n_images,slope_A,")
 
     ft.print_table4(ft.table4(data))
     out = capsys.readouterr().out
@@ -83,6 +100,15 @@ def test_forcing_table(tmp_path, capsys):
     assert "| m | Unseen | AAAAB | TF one-shot, given=0 | 1 |" in capsys.readouterr().out
     ft.write_csv(ft.table4(data), str(tmp_path / "t4.csv"))
     assert "A_vs_default_uncut_holm" in (tmp_path / "t4.csv").read_text().splitlines()[0]
+
+
+def test_slope_test():
+    import numpy as np
+    y = np.tile([0.0, 0.0, 0.0, 1.0, 1.0], (40, 1))  # every image flips to 1 at three labels given
+    t = ft.slope_test(np.arange(5.0), y, reps=2000)
+    assert abs(t["diff"] - 0.3) < 1e-9 and t["p"] < 0.001
+    flat = ft.slope_test(np.arange(5.0), np.ones((40, 5)), reps=2000)
+    assert flat["diff"] == 0 and flat["p"] == 1
 
 
 def test_homogeneous_control(tmp_path):
