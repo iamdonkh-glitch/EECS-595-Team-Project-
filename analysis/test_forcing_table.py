@@ -167,6 +167,25 @@ def test_assistant_prefill(tmp_path, capsys):
     assert "| m | Unseen | AAAAB | TF one-shot, assistant | 5 | 1 |" in capsys.readouterr().out
 
 
+def test_holm_families(tmp_path):
+    assert [ft.family(c, "AAAAB") for c in ("TF one-shot", "CF", "single", "TF one-shot, given=2",
+                                            "CF, assistant", "CF near", "CF far, given=1")] == \
+        ["core", "core", "core", "dose", "placement", "C near/far", "dose"]
+    assert ft.family("TF one-shot", ft.CONTROL) == "control"
+
+    def holms(rows):
+        p = tmp_path / "h.jsonl"
+        p.write_text("\n".join(json.dumps(r) for r in rows) + "\n")
+        return {(r["order"], r["condition"]): r["vs_A"]["holm"] for r in ft.table4(ft.load([str(p)])) if r.get("vs_A")}
+    core = [row("default", "AAAAB", i, B) for i in range(8)]
+    core += [row("teacher_forcing", "AAAAB", i, A if i < 6 else B, tf_mode="oneshot") for i in range(8)]
+    core += [row("counterfactual", "AAAAB", i, A if i < 2 else B, cf=C) for i in range(8)]
+    before = holms(core)
+    after = holms(core + [row("teacher_forcing", "AAAAB", i, A, tf_mode="oneshot", n_given=2) for i in range(8)])
+    assert all(after[k] == v for k, v in before.items())  # the dose rows do not touch the core family
+    assert after[("AAAAB", "TF one-shot, given=2")] < 1
+
+
 def test_out_of_scope_rows_are_dropped():
     r = row("default", "AAAAB", 0, A)
     assert ft.condition(dict(r, budget=512)) is None

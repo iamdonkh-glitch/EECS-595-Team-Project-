@@ -23,7 +23,10 @@ Conventions (as analysis/rq1_table.py): tolerant parse primary, strict beside it
 finish_reason == 'length' makes B wrong (and neither A nor C), kept in the denominator. CIs are 95%
 percentile bootstraps over images (2,000 reps). Paired tests against default, and separately against
 single (B asked alone), on the same images: exact McNemar on B correct (and on B labelled A); Holm over
-all comparisons of one model with that reference, per outcome.
+the comparisons of one model with that reference, per outcome and per probe family: core (single, TF
+incremental, TF one-shot, CF), dose (given=0-3), placement (assistant prefill), C near/far, and the
+Homogeneous control. Each family is one question, so adding a finer direction leaves the core p-values
+unchanged.
 Strict labels of one-shot TF and counterfactual rows are re-read from the answer with
 rope_runner.scoring.keyed_segment (the segment keyed objK), whatever scorer wrote the row.
 Assistant-turn prefill rows are read with rope_runner.scoring.prefill_labels: Table 4 uses the label
@@ -202,13 +205,31 @@ def table4(data):
                         if oname != CONTROL:
                             row["vs1_A"] = paired(alone, g, "t", "A")
                     rows.append(row)
-    # Holm: per model, over its comparisons with default (or with single), per outcome
+    # Holm: per model, outcome, reference (default or single) and probe family
     for m in {r["model"] for r in rows}:
         for key in ("vs_ok", "vs_A", "vs_ok_s", "vs_ok_uncut", "vs_A_uncut", "vs1_ok", "vs1_A"):
-            rs = [r for r in rows if r["model"] == m and r.get(key)]
-            for r, a in zip(rs, rq1.holm([r[key]["p"] for r in rs])):
-                r[key]["holm"] = a
+            for fam in FAMILIES:
+                rs = [r for r in rows if r["model"] == m and r.get(key) and family(r["condition"], r["order"]) == fam]
+                for r, a in zip(rs, rq1.holm([r[key]["p"] for r in rs])):
+                    r[key]["holm"] = a
     return rows
+
+
+FAMILIES = ("core", "dose", "placement", "C near/far", "control")
+
+
+def family(cond, order):
+    """Holm family of a Table 4 comparison. Each finer direction is its own question, so its tests are
+    corrected among themselves and adding one does not change the core Table 4 p-values."""
+    if order == CONTROL:
+        return "control"
+    if cond.endswith(", assistant"):
+        return "placement"
+    if ", given=" in cond:
+        return "dose"
+    if cond.startswith(("CF near", "CF far")):
+        return "C near/far"
+    return "core"
 
 
 def cmp_s(v):
@@ -222,7 +243,8 @@ def print_table4(rows):
     print("B acc = B named correctly; B=A = B given the class of the other four (inertia); B=C = B given the "
           "counterfactual class. Tolerant parse, strict in parentheses. cut = calls for B at the token limit "
           "(scored wrong). vs default = paired on the same images, y - x in points; p = exact McNemar, Holm over "
-          "the model's comparisons.\n")
+          "the model's comparisons in the same probe family (core = single, TF incremental, TF one-shot, CF; "
+          "dose = given=0-3; placement = assistant; C near/far; Homogeneous control).\n")
     print("| model | split | order | condition | n img | cut | B acc [95% CI] | B=A [95% CI] | B=C | "
           "acc vs default [CI] | p (Holm) | B=A vs default [CI] | p (Holm) |")
     print("|---|---|---|---|---|---|---|---|---|---|---|---|---|")
@@ -246,8 +268,8 @@ def print_uncut(rows):
     if not rows:
         return
     print("## Table 4, sensitivity: images where neither call for B hit the token limit\n")
-    print("Same comparisons with default as Table 4 (tolerant, y - x in points, exact McNemar, Holm over the "
-          "model's comparisons), on the images where neither the condition's nor default's call for B was cut.\n")
+    print("Same comparisons with default as Table 4 (tolerant, y - x in points, exact McNemar, Holm within the "
+          "probe family), on the images where neither the condition's nor default's call for B was cut.\n")
     print("| model | split | order | condition | n img | acc vs default [CI] | p (Holm) | B=A vs default [CI] | p (Holm) |")
     print("|---|---|---|---|---|---|---|---|---|")
     for r in rows:
@@ -265,7 +287,7 @@ def print_vs_single(rows):
         return
     print("## Table 4, against Single-object (B asked alone)\n")
     print("Same images, tolerant, y - x in points, exact McNemar, Holm over the model's comparisons with "
-          "Single-object. Single-object asks one box per turn with the official single-object prompt, so this "
+          "Single-object in the same probe family (default counts as core). Single-object asks one box per turn with the official single-object prompt, so this "
           "gap holds both the multi-object format (default) and the given labels.\n")
     print("| model | split | order | condition | n img | acc vs single [CI] | p (Holm) | B=A vs single [CI] | p (Holm) |")
     print("|---|---|---|---|---|---|---|---|---|")

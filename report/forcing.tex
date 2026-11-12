@@ -31,8 +31,9 @@ Homogeneous items, where all five objects share a class and following the labels
 \paragraph{Measures.} For each B we record whether it is named correctly, labelled A (inertia) or
 labelled C. We follow the shared protocol: the tolerant parser is primary, a call that reaches the
 token limit counts as wrong, every comparison is paired on the same images with an exact McNemar test
-and a bootstrap 95\% CI, and $p$-values are Holm-adjusted over all comparisons of one model with the
-same reference. Because a cut call can never be A, we repeat each comparison on the images where
+and a bootstrap 95\% CI, and $p$-values are Holm-adjusted over the comparisons of one model with the
+same reference within one probe family (the core probes of Table~\ref{tab:forcing}, the dose series,
+placement, C near / far, and the Homogeneous control). Because a cut call can never be A, we repeat each comparison on the images where
 neither call was cut. For the dose series we also report the per-image least-squares slope of B=A over
 $n$, with a permutation test that shuffles $n$ within each image.
 
@@ -57,7 +58,7 @@ CF in answer (B labelled C) & \tbd & \tbd & 36.8 & 56.3 & \tbd & \tbd & \tbd & \
 ``B labelled C'' rows give B labelled C instead). ``In answer'': the given labels are written as the
 start of the model's answer; the label scored is the first one it writes for B. $^{*}$: differs from
 Default, Holm-adjusted $p<0.05$ (exact McNemar, paired). For MiMo-RL, B=A under Default and every forcing probe differs from Single-object at Holm
-$p<0.001$. Seen, accuracy and strict scores:
+$p<0.01$. Seen, accuracy and strict scores:
 Appendix~\tbd.}
 \label{tab:forcing}
 \end{table*}
@@ -87,7 +88,7 @@ labels it changes at least one of them, and under CF it always replaces C with i
 \paragraph{The model rejects a wrong class but still drifts to A.} Under CF, MiMo-RL almost never
 copies C: B is labelled C in 0.3--1.2\% of items, and C survives on any of the four given boxes in
 under 2\% of answers. Instead the model relabels those boxes, mostly as A (64.1\% Unseen, 74.1\% Seen
-of answers). B=A still rises on AAAAB ($+6.3$, Holm $p=0.03$). Here the A labels before B are the
+of answers). B=A still rises on AAAAB ($+6.3$, Holm $p=0.04$). Here the A labels before B are the
 model's own, which is the self-induced part of RQ2. CF also changes the question (B is asked after
 four given labels), so this probe alone does not separate the two causes. C near / far: \tbd.
 
