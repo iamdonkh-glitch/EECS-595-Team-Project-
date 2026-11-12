@@ -55,6 +55,20 @@ def test_default_vs_single():
     assert bs.default_vs_single([d, s])[("m", "validation", "AAAAB")][1] == 0.0
 
 
+def test_load_keeps_one_row_per_key(tmp_path=None):
+    import json
+    import tempfile
+    d = tmp_path or tempfile.mkdtemp()
+    r = row("default", "obj1: person, obj2: person, obj3: person, obj4: person, obj5: person", key="k1")
+    paths = []
+    for name in ("a.jsonl", "b.jsonl"):
+        p = os.path.join(str(d), name)
+        with open(p, "w", encoding="utf-8") as f:
+            f.write(json.dumps(r) + "\n")
+        paths.append(p)
+    assert len(bs.load(paths)) == 1
+
+
 if __name__ == "__main__":
     for name, fn in list(globals().items()):
         if name.startswith("test_"):

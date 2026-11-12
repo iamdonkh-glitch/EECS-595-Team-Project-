@@ -121,11 +121,23 @@ def default_vs_single(rows):
     return out
 
 
-def main(paths):
-    rows = []
+def load(paths):
+    """Rows of all files, the first row per key (rq1_<m>_default_* and rq1_<m>_adversarial_default_*
+    hold the same Adversarial rows)."""
+    rows, seen = [], set()
     for p in paths:
         with open(p, encoding="utf-8") as f:
-            rows += [json.loads(line) for line in f if line.strip()]
+            for line in f:
+                if line.strip():
+                    r = json.loads(line)
+                    if r["key"] not in seen:
+                        seen.add(r["key"])
+                        rows.append(r)
+    return rows
+
+
+def main(paths):
+    rows = load(paths)
     print("# Box swaps inside B=A\n")
     print("Calls that label all five boxes in one answer, not cut. \"B on an A box\": the gold class of B is "
           "written on one of the four A boxes.\n")
