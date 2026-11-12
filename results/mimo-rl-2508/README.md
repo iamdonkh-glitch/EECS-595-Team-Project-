@@ -6,7 +6,7 @@ This folder has four runs:
 
 - The finished RQ1 run on all 5,163 ROPE items, with both probes: `default` (all five boxes in one answer) and `single` (one box per call). Decoding is greedy. Split `train` is Seen and `validation` is Unseen.
 - The core RQ2 forcing runs on Adversarial (`AAAAB`, `BAAAA`): one-shot teacher forcing, moh's incremental teacher forcing, and the counterfactual prefix (section "RQ2 forcing probes").
-- The finer RQ2 forcing runs: labels given 0–3 (dose-response, Figure 4), labels written as the start of the model's answer (placement), and the Homogeneous control (section "RQ2 finer forcing runs"). C near / far is still running and will be added when it finishes.
+- The finer RQ2 forcing runs: labels given 0–3 (dose-response, Figure 4), labels written as the start of the model's answer (placement), the Homogeneous control, and C near / far (section "RQ2 finer forcing runs").
 - A smoke run on part of Unseen, made before the full run (last section).
 
 ## Files of the RQ1 run
@@ -194,7 +194,7 @@ The six default format failures have two causes:
 | `forcing_mimo-rl-2508_tf-incremental_validation.jsonl` | incremental teacher forcing (moh), Unseen | 668 | 3,340 | 244 (7.3%) | 40.7 MB |
 | `forcing_mimo-rl-2508_cf_train.jsonl` | counterfactual prefix, Seen | 336 | 336 | 18 (5.4%) | 3.5 MB |
 | `forcing_mimo-rl-2508_cf_validation.jsonl` | counterfactual prefix, Unseen | 668 | 668 | 50 (7.5%) | 8.4 MB |
-| `forcing_table4.csv` | Table 4 with CIs, p-values, the uncut check and the comparison with single, one line per model x split x order x condition (core and finer runs) | 72 | | | |
+| `forcing_table4.csv` | Table 4 with CIs, p-values, the uncut check and the comparison with single, one line per model x split x order x condition (core and finer runs) | 84 | | | |
 | `forcing_tables.md` | full output of `analysis/forcing_table.py` on the RQ1 files and every forcing file here (core and finer) | | | | |
 | `forcing_parser_audit.jsonl` | hand check of 48 rows: key, verdict, note | 48 | | | |
 
@@ -228,12 +228,12 @@ sbatch -A "$CSE595_ACCOUNT" -o "$CSE595_LOGS/%x-%j.out" -e "$CSE595_LOGS/%x-%j.e
 
 ### Scoring
 
-Table 4 comes from `analysis/forcing_table.py` on branch `rq2/forcing-probes` (commit `679c3a2`). It reads the RQ1 files (the full ones give the Homogeneous baseline) and every forcing file in this folder, and writes `forcing_tables.md`, `forcing_table4.csv`, `forcing_fig4_tests.csv` and `forcing_fig4_dose.png`:
+Table 4 comes from `analysis/forcing_table.py` on branch `rq2/forcing-probes` (commit `539ccfc`; from that commit each bootstrap CI is seeded by its own values, so loading more conditions no longer moves a CI). It reads the RQ1 files (the full ones give the Homogeneous baseline) and every forcing file in this folder, and writes `forcing_tables.md`, `forcing_table4.csv`, `forcing_fig4_tests.csv` and `forcing_fig4_dose.png`:
 
 ```bash
 python analysis/forcing_table.py --out-dir results/mimo-rl-2508 \
   results/mimo-rl-2508/rq1_mimo-rl-2508_*.jsonl results/mimo-rl-2508/forcing_mimo-rl-2508_*.jsonl \
-  results/mimo-rl-2508/forcing_{dose,place,homog}_mimo-rl-2508_*.jsonl > results/mimo-rl-2508/forcing_tables.md
+  results/mimo-rl-2508/forcing_{dose,place,homog,cfnear,cffar}_mimo-rl-2508_*.jsonl > results/mimo-rl-2508/forcing_tables.md
 ```
 
 - **Outcomes per B.** Each B is scored three ways: named correctly; labelled A (inertia: the class of the other four); and, for CF, labelled C.
@@ -273,14 +273,14 @@ Pooled over both orders on Unseen (uncut), B=A rises by +6.6 under TF one-shot (
 
 ### What the model writes after the given labels
 
-The model rewrites the whole list. In 99.7–100% of answered rows it gives all five labels `obj1`–`obj5`, not only B. It treats the given labels as follows:
+The model rewrites the whole list. In 99.7–100% of answered rows it gives all five labels `obj1`–`obj5`, not only B. It treats the given labels as follows (section "What the answer does with the given boxes" of `forcing_tables.md`, both orders):
 
 | probe | split | keeps the given labels on all four other boxes | labels those four boxes A |
 |---|---|---|---|
 | TF one-shot (given = A) | Seen / Unseen | 87.2% / 77.0% | 87.2% / 77.0% |
-| CF (given = C) | Seen / Unseen | 0.9% / 0.0% | 74.1% / 64.1% |
+| CF (given = C) | Seen / Unseen | 0.9% / 0.0% | 74.5% / 64.1% |
 
-Under CF it almost never keeps C: C appears on any of the four boxes in only 5 of 320 Seen and 9 of 618 Unseen answered rows. Instead it relabels them, mostly as A.
+Under CF it almost never keeps C: C appears on any of the four boxes in only 5 of 318 Seen and 9 of 618 Unseen answered rows. Instead it relabels them, mostly as A. (An earlier, hand-counted version of this README had 74.1% over 320 Seen rows; the script counts 318 answered Seen rows.)
 
 ### Parser audit
 
@@ -318,6 +318,10 @@ The CF answers in the sample all replace C.
 | `forcing_fig4_dose.png` | Figure 4: B labelled A and B correct against the number of labels given | | | | |
 | `forcing_fig4_tests.csv` | dose tests: each n = 1–4 against n = 0, and the per-image slope, for B=A and B correct | 6 | | | |
 | `forcing_output_check.jsonl` | hand check of 50 raw outputs: key, condition, automatic reading, verdict, note | 50 | | | |
+| `forcing_cfnear_mimo-rl-2508_train.jsonl` | CF with C = the remaining class most similar to A, Seen | 336 | 336 | 11 (3.3%) | 3.3 MB |
+| `forcing_cfnear_mimo-rl-2508_validation.jsonl` | the same, Unseen | 668 | 668 | 42 (6.3%) | 8.1 MB |
+| `forcing_cffar_mimo-rl-2508_train.jsonl` | CF with C = the remaining class least similar to A, Seen | 336 | 336 | 15 (4.5%) | 3.4 MB |
+| `forcing_cffar_mimo-rl-2508_validation.jsonl` | the same, Unseen | 668 | 668 | 42 (6.3%) | 8.0 MB |
 
 For the placement files, "at the limit" counts both calls whose thinking never closed and calls whose re-check after the label ran out of tokens. Table 4 counts only the first kind as cut, because the label it scores was already written in the second.
 
@@ -405,6 +409,32 @@ The task doc asks to open 50 raw outputs per model and check whether the model c
 3. **A wrong class written as the model's answer is copied onto B.** After four forced C labels, the first label for B is C in 31–56% of items, against at most 1.2% when C is in the user turn, and it is never A. The model often notices and re-checks, and by the end of the answer B=C falls to 8–29%.
 4. **Labels help when they are right.** On Homogeneous items the same probe raises accuracy on box 5 by 6.5 (Unseen) and 9.0 (Seen) points.
 5. **With labels in the user turn, the model always rewrites the whole list.** So the dose changes the labels in the prompt, not how many labels come before B in the answer.
+
+### C near / far
+
+The counterfactual probe again, with C chosen by its name's similarity to A instead of at random (`--cf-class near|far`): near = the remaining candidate class most similar to A, far = the least similar. "Remaining" excludes every class in the image's `object_set` and the gold labels; A is the majority gold class. Similarity is the cosine of `sentence-transformers/all-mpnet-base-v2` name embeddings (mean pooling, L2 norm, revision `e8c3b32…`), stored in `harness/configs/class_similarity.json`; ties go to the earlier candidate. The mean cosine of C with A is 0.49 for near, 0.27 for the random C of the core run, and 0.13 for far.
+
+| job | run | split | code | elapsed |
+|---|---|---|---|---|
+| 65937209 | C near | Unseen | `df9d74d` | 39:20 |
+| 65937210 | C far | Unseen | `df9d74d` | 39:37 |
+| 65937211 | C near | Seen | `df9d74d` | 18:05 |
+| 65937212 | C far | Seen | `df9d74d` | 18:49 |
+
+All four ran on A40. The command is the core CF command with `EXTRA="--chunk 128 --cf-class near"` (or `far`) and `OUT=$CSE595_RUNS/forcing_cfnear_mimo-rl-2508_<split>.jsonl` (or `forcing_cffar_…`). Each file has one row per ROPE entry in each subset, no duplicate keys and no broken lines.
+
+How often C is accepted (%, tolerant). B=C: B labelled C. C kept: C stays on at least one of the four given boxes, over answered rows. B=A: B labelled A.
+
+| split | order | B=C random / near / far | C kept random / near / far | B=A random / near / far |
+|---|---|---|---|---|
+| Unseen | AAAAB | 0.3 / 2.7 / 0.3 | 1.3 / 7.0 / 0.0 | 35.6 / 37.7 / 38.9 |
+| Unseen | BAAAA | 0.6 / 1.8 / 0.9 | 1.6 / 9.3 / 0.6 | 35.3 / 35.3 / 35.0 |
+| Seen | AAAAB | 1.2 / 7.7 / 0.0 | 1.9 / 24.1 / 0.6 | 23.8 / 19.6 / 25.0 |
+| Seen | BAAAA | 0.6 / 1.8 / 0.6 | 1.3 / 19.6 / 1.3 | 22.6 / 21.4 / 21.4 |
+
+Paired on the same images, both orders pooled (section "C near / far" of `forcing_tables.md`; exact McNemar, Holm per model and outcome over its 18 comparisons: 2 splits x 3 orders x 3 pairs): B=C is higher with near than with random C (Unseen +1.8, Holm 0.029; Seen +3.9, Holm 0.066) and than with far C (Seen +4.5, Holm 0.0047; Unseen +1.6, Holm 0.23). Far does not differ from random. B=A does not differ significantly between any two of the three.
+
+**Note for the team.** A wrong class close to A is accepted more often (C kept on a given box in 8% of Unseen and 22% of Seen answers, against 0–2% for random or far C), but it is still rare, and the drift of B toward A is the same for all three. Against `default`, B=A on Unseen `AAAAB` rises under all three (random +6.3, near +8.4, far +9.6 points).
 
 ## Smoke run (before the full run)
 
