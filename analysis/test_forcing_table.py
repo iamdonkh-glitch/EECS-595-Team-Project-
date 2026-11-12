@@ -146,21 +146,25 @@ def test_assistant_prefill(tmp_path, capsys):
     rows = [asst(0, f" {A}"),                       # copies A and stops
             asst(1, redo),                          # copies A, then re-checks and fixes B
             asst(2, f" {A}\n\nWait, no. " + "look " * 50, "length"),  # copies A, re-check cut
-            asst(3, None, "length")]                # thinking never closed
-    rows += [row("default", "AAAAB", i, B) for i in range(4)]
+            asst(3, None, "length"),                # thinking never closed
+            asst(4, f"\n\nobj1: {A}, obj2: {A}, obj3: {A}, obj4: {A}, obj5: {B}")]  # restarts its own list
+    rows += [row("default", "AAAAB", i, B) for i in range(5)]
     assert ft.b_record(rows[2])["cut"] is False and ft.b_record(rows[2])["t"]["A"] == 1
     assert ft.b_record(rows[3])["cut"] is True
+    rs = ft.b_record(rows[4])
+    assert rs["restart"] == 1 and rs["t"] == {"ok": 0, "A": 0, "C": 0} and rs["f"]["ok"] == 1
+    assert ft.b_record(rows[1])["restart"] == 0
     p = tmp_path / "a.jsonl"
     p.write_text("\n".join(json.dumps(r) for r in rows) + "\n")
     data = ft.load([str(p)])
     t4 = {(r["order"], r["condition"]): r for r in ft.table4(data)}
     a = t4[("AAAAB", "TF one-shot, assistant")]
-    assert (a["n_images"], a["n_cut"], a["A_t"], a["A_s"]) == (4, 1, 0.75, 0.75)
+    assert (a["n_images"], a["n_cut"], a["A_t"], a["A_s"]) == (5, 1, 0.6, 0.6)
     ap = {r["order"]: r for r in ft.after_prefill(data)}["AAAAB"]
-    assert ap["more"][0] == 0.5 and ap["unresolved"][0] == 0.25
-    assert ap["final_ok"][0] == 0.25 and ap["final_A"][0] == 0.25
+    assert ap["more"][0] == 0.6 and ap["restart"][0] == 0.2 and ap["unresolved"][0] == 0.2
+    assert ap["final_ok"][0] == 0.4 and ap["final_A"][0] == 0.2
     ft.print_after_prefill(ft.after_prefill(data))
-    assert "| m | Unseen | AAAAB | TF one-shot, assistant | 4 | 1 |" in capsys.readouterr().out
+    assert "| m | Unseen | AAAAB | TF one-shot, assistant | 5 | 1 |" in capsys.readouterr().out
 
 
 def test_out_of_scope_rows_are_dropped():

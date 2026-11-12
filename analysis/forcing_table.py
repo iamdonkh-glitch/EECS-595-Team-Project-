@@ -110,6 +110,8 @@ def b_record(r):
         cut = pl is None
         tol, strict = (pl["first_t"], pl["first_s"]) if pl else (None, None)
         rec["more"] = int(bool(pl and pl["more"]))
+        # wrote no label after the forced "objK:" and started its own list on a new line instead
+        rec["restart"] = int(bool(pl and pl["first_s"] is None and pl["more"]))
         rec["f"] = out(pl["final_t"] if pl else None)
         rec["unresolved"] = int(bool(pl and pl["more"] and pl["final_t"] is None))
     rec["cut"] = cut
@@ -289,7 +291,7 @@ def after_prefill(data):
                         continue
                     row = dict(model=m, split=rq1.SPLIT_NAME[sp], order=oname, condition=cond, n_images=len(recs),
                                n_cut=sum(r["cut"] for r in recs))
-                    for what in ("more", "unresolved"):
+                    for what in ("more", "restart", "unresolved"):
                         row[what] = rate([{"x": {"v": r[what]}} for r in recs], "x", "v")
                     for what in ("ok", "A", "C"):
                         row[f"first_{what}"] = rate(recs, "t", what)
@@ -301,17 +303,19 @@ def after_prefill(data):
 def print_after_prefill(rows):
     print("## Assistant-turn prefill: the forced line, then the model's own re-check (%)\n")
     print("first = the label written right after the prefill (the one Table 4 uses); kept writing = the model "
-          "went on after it (typically \"Wait, no, that's wrong\" and a re-check); final = obj K's last "
+          "went on after it (typically \"Wait, no, that's wrong\" and a re-check); restarted = wrote no label "
+          "after the forced \"objK:\" and began its own five-label list on a new line (counted in kept writing; "
+          "first counts as wrong and not A); final = obj K's last "
           "\"objK: <class>\" in the answer (= first when it stopped); unresolved = kept writing but gave no final "
           "label for B, or hit the token limit. cut = thinking never closed. All over n img, tolerant.\n")
     print("| model | split | order | condition | n img | cut | first: B acc | first: B=A | first: B=C | kept writing | "
-          "final: B acc | final: B=A | final: B=C | unresolved |")
-    print("|---|---|---|---|---|---|---|---|---|---|---|---|---|---|")
+          "restarted | final: B acc | final: B=A | final: B=C | unresolved |")
+    print("|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|")
     for r in rows:
         cf = r["condition"].startswith("CF")
         c = lambda k: rq1.pct(r[k][0])
         print(f"| {r['model']} | {r['split']} | {r['order']} | {r['condition']} | {r['n_images']} | {r['n_cut']} | "
-              f"{c('first_ok')} | {c('first_A')} | {c('first_C') if cf else '-'} | {c('more')} | "
+              f"{c('first_ok')} | {c('first_A')} | {c('first_C') if cf else '-'} | {c('more')} | {c('restart')} | "
               f"{c('final_ok')} | {c('final_A')} | {c('final_C') if cf else '-'} | {c('unresolved')} |")
     print()
 
