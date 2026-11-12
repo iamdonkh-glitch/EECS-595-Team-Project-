@@ -42,6 +42,7 @@ import os
 import re
 import subprocess
 import sys
+import zlib
 
 import numpy as np
 
@@ -170,9 +171,21 @@ def cell(data, model, cond, split, subs):
     return out
 
 
+def boot(v):
+    """95% percentile bootstrap of the mean, as rq1_table.boot_mean, but seeded from the values
+    themselves: rq1_table draws from one module-wide generator, so a CI there shifts with whatever
+    was bootstrapped before it (for example when more conditions or models are loaded)."""
+    v = np.asarray(v, dtype=float)
+    if len(v) == 0:
+        return (float("nan"), float("nan"))
+    rng = np.random.default_rng(zlib.crc32(v.tobytes()))
+    means = v[rng.integers(0, len(v), size=(rq1.REPS, len(v)))].mean(axis=1)
+    return (float(np.percentile(means, 2.5)), float(np.percentile(means, 97.5)))
+
+
 def rate(recs, tag, what):
     v = [r[tag][what] for r in recs]
-    return float(np.mean(v)) if v else float("nan"), rq1.boot_mean(v)
+    return float(np.mean(v)) if v else float("nan"), boot(v)
 
 
 def paired(x, y, tag, what):
@@ -185,7 +198,7 @@ def paired(x, y, tag, what):
     b = sum(1 for a, c in zip(xv, yv) if a and not c)
     c = sum(1 for a, cc in zip(xv, yv) if cc and not a)
     d = [cc - a for a, cc in zip(xv, yv)]
-    return dict(n=len(keys), diff=float(np.mean(d)), ci=rq1.boot_mean(d), b=b, c=c, p=rq1.mcnemar_exact(b, c))
+    return dict(n=len(keys), diff=float(np.mean(d)), ci=boot(d), b=b, c=c, p=rq1.mcnemar_exact(b, c))
 
 
 def conditions_of(data, model):
@@ -510,7 +523,7 @@ def slope_test(x, y, reps=10000, seed=0):
         stat = (np.take_along_axis(np.broadcast_to(y, perm.shape), perm, axis=2) @ xc).mean(axis=1) / ss
         hits += int(np.sum(np.abs(stat) >= abs(obs) - 1e-12))
         done += k
-    return dict(n=len(s), diff=obs, ci=rq1.boot_mean(s), p=(hits + 1) / (reps + 1))
+    return dict(n=len(s), diff=obs, ci=boot(s), p=(hits + 1) / (reps + 1))
 
 
 def dose_tests(data):

@@ -167,6 +167,14 @@ def test_assistant_prefill(tmp_path, capsys):
     assert "| m | Unseen | AAAAB | TF one-shot, assistant | 5 | 1 |" in capsys.readouterr().out
 
 
+def test_boot_depends_only_on_its_values():
+    v = [0, 1, 1, 0, 1, 1, 0, 0, 1, 1]
+    first = ft.boot(v)
+    ft.boot(list(range(50)))  # an unrelated bootstrap in between must not move the CI
+    assert ft.boot(v) == first and first[0] <= 0.6 <= first[1]
+    assert all(x != x for x in ft.boot([]))
+
+
 def test_holm_families(tmp_path):
     assert [ft.family(c, "AAAAB") for c in ("TF one-shot", "CF", "single", "TF one-shot, given=2",
                                             "CF, assistant", "CF near", "CF far, given=1")] == \
