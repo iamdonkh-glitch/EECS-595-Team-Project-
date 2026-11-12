@@ -1,14 +1,13 @@
 # Runs of mimo-rl-2508 (MiMo-VL-7B-RL-2508)
 
-Xingjian Liu's runs of MiMo-VL-7B-RL-2508 (`mimo-rl-2508`). This folder holds result data only. The code is the team harness on `main` at `52429fe`.
+Xingjian Liu's runs of MiMo-VL-7B-RL-2508 (`mimo-rl-2508`). This folder holds result data only. The RQ1 and core forcing runs use the team harness on `main` at `52429fe`. The finer forcing runs use commits on branch `rq2/forcing-probes`, named in their section.
 
-This folder has three runs:
+This folder has four runs:
 
 - The finished RQ1 run on all 5,163 ROPE items, with both probes: `default` (all five boxes in one answer) and `single` (one box per call). Decoding is greedy. Split `train` is Seen and `validation` is Unseen.
 - The core RQ2 forcing runs on Adversarial (`AAAAB`, `BAAAA`): one-shot teacher forcing, moh's incremental teacher forcing, and the counterfactual prefix (section "RQ2 forcing probes").
+- The finer RQ2 forcing runs: labels given 0–3 (dose-response, Figure 4), labels written as the start of the model's answer (placement), and the Homogeneous control (section "RQ2 finer forcing runs"). C near / far is still running and will be added when it finishes.
 - A smoke run on part of Unseen, made before the full run (last section).
-
-The finer forcing runs (labels given 0–3, assistant-turn prefill, Homogeneous control) are still queued and will be added when they finish.
 
 ## Files of the RQ1 run
 
@@ -195,8 +194,8 @@ The six default format failures have two causes:
 | `forcing_mimo-rl-2508_tf-incremental_validation.jsonl` | incremental teacher forcing (moh), Unseen | 668 | 3,340 | 244 (7.3%) | 40.7 MB |
 | `forcing_mimo-rl-2508_cf_train.jsonl` | counterfactual prefix, Seen | 336 | 336 | 18 (5.4%) | 3.5 MB |
 | `forcing_mimo-rl-2508_cf_validation.jsonl` | counterfactual prefix, Unseen | 668 | 668 | 50 (7.5%) | 8.4 MB |
-| `forcing_table4.csv` | Table 4 with CIs, p-values and the uncut check, one line per model x split x order x condition | 30 | | | |
-| `forcing_tables.md` | full output of `analysis/forcing_table.py` on these files and the Adversarial RQ1 files | | | | |
+| `forcing_table4.csv` | Table 4 with CIs, p-values, the uncut check and the comparison with single, one line per model x split x order x condition (core and finer runs) | 72 | | | |
+| `forcing_tables.md` | full output of `analysis/forcing_table.py` on the RQ1 files and every forcing file here (core and finer) | | | | |
 | `forcing_parser_audit.jsonl` | hand check of 48 rows: key, verdict, note | 48 | | | |
 
 Every row asks about the odd object B (box 5 in `AAAAB`, box 1 in `BAAAA`). Each probe puts labels for the other four boxes in the user turn, then asks for B:
@@ -229,16 +228,17 @@ sbatch -A "$CSE595_ACCOUNT" -o "$CSE595_LOGS/%x-%j.out" -e "$CSE595_LOGS/%x-%j.e
 
 ### Scoring
 
-Table 4 comes from `analysis/forcing_table.py`. The script is on Xingjian's branch `xingjian/forcing-probes` (commit `bb66828`); it will be on GitHub once that branch is pushed. It reads these files and the two `rq1_mimo-rl-2508_adversarial_*` files:
+Table 4 comes from `analysis/forcing_table.py` on branch `rq2/forcing-probes` (commit `679c3a2`). It reads the RQ1 files (the full ones give the Homogeneous baseline) and every forcing file in this folder, and writes `forcing_tables.md`, `forcing_table4.csv`, `forcing_fig4_tests.csv` and `forcing_fig4_dose.png`:
 
 ```bash
 python analysis/forcing_table.py --out-dir results/mimo-rl-2508 \
-  results/mimo-rl-2508/rq1_mimo-rl-2508_adversarial_*.jsonl results/mimo-rl-2508/forcing_mimo-rl-2508_*.jsonl
+  results/mimo-rl-2508/rq1_mimo-rl-2508_*.jsonl results/mimo-rl-2508/forcing_mimo-rl-2508_*.jsonl \
+  results/mimo-rl-2508/forcing_{dose,place,homog}_mimo-rl-2508_*.jsonl > results/mimo-rl-2508/forcing_tables.md
 ```
 
 - **Outcomes per B.** Each B is scored three ways: named correctly; labelled A (inertia: the class of the other four); and, for CF, labelled C.
 - **Parsers.** The tolerant parse gives the main number. For one-shot rows, the script re-reads strict from the answer by the key `objK`, whatever scorer wrote the row. `main`'s scorer reads by position, which is wrong for `BAAAA`.
-- **Tests.** Every condition is compared with `default` on the same images: exact McNemar, then Holm over all of the model's comparisons. CIs are bootstraps over images.
+- **Tests.** Every condition is compared with `default` on the same images (and, in a second table, with `single`): exact McNemar, then Holm within the probe family. The families are core (single, TF incremental, TF one-shot, CF), dose (given 0–3), placement, C near / far and the Homogeneous control. Each family is one question, so adding a finer run does not change the core p-values below. CIs are bootstraps over images.
 - **Token limit.** A call for B that hits the limit makes B wrong and never A, as in RQ1.
 - **Uncut check.** `default` is usually cut more often than the forcing probes (57 vs 30 of 668 Unseen images for TF one-shot), and that alone would raise B=A. So every comparison is repeated on the images where neither call for B was cut.
 
@@ -301,7 +301,110 @@ The CF answers in the sample all replace C.
 3. **The model rejects the counterfactual class but still drifts to A.** B=C is 0.3–1.2%, and the model rewrites the given boxes, mostly as A. B=A still rises under CF (Unseen pooled +4.5 uncut, Holm p 0.038). This fits B being pulled by the model's own relabelling of the other four boxes, which is the self-induced part of RQ2. But CF also changes the question (B is asked after four given labels), so this run alone does not separate the two.
 4. **Single stays far ahead of every forcing condition on B.** Forcing lowers pooled B accuracy against default by 1.5–5 points. The default−single gap from RQ1 stays.
 5. **Strict is unreliable here, as in RQ1.** Most strict failures are the `\boxed{}` habit or moh's incremental early stop, so read strict as a format measure.
-6. **Assistant-turn prefill changed after a test.** In an 8-image test, the model wrote the forced label right after the prefill. It then often wrote "Wait, no, that's wrong" and re-checked the image. The 128-token answer stage cut that re-check. The queued assistant-prefill runs now give the answer stage the rest of the 8,192-token budget (commit `25a0244` on `xingjian/forcing-probes`). Table 4 will score the label written right after the prefill, and a second table will report the final label after the re-check.
+6. **Assistant-turn prefill changed after a test.** In an 8-image test, the model wrote the forced label right after the prefill. It then often wrote "Wait, no, that's wrong" and re-checked the image. The 128-token answer stage cut that re-check. The full assistant-prefill runs therefore give the answer stage the rest of the 8,192-token budget (commit `25a0244` on `rq2/forcing-probes`). Their results are in the next section.
+
+## RQ2 finer forcing runs
+
+### Files
+
+| file | contents | rows | calls | at the limit | size |
+|---|---|---|---|---|---|
+| `forcing_dose_mimo-rl-2508_train.jsonl` | one-shot TF with only the first n of the four labels given (n = 0–3), Seen, `AAAAB` `BAAAA` | 1,344 | 1,344 | 52 (3.9%) | 12.7 MB |
+| `forcing_dose_mimo-rl-2508_validation.jsonl` | the same, Unseen | 2,672 | 2,672 | 195 (7.3%) | 35.3 MB |
+| `forcing_place_mimo-rl-2508_train.jsonl` | TF one-shot and CF with the labels written as the start of the model's answer, Seen | 672 | 672 | 49 (7.3%) | 8.4 MB |
+| `forcing_place_mimo-rl-2508_validation.jsonl` | the same, Unseen | 1,336 | 1,336 | 151 (11.3%) | 21.9 MB |
+| `forcing_homog_mimo-rl-2508_train.jsonl` | one-shot TF on Homogeneous (`homogenous`), Seen | 400 | 400 | 0 | 1.5 MB |
+| `forcing_homog_mimo-rl-2508_validation.jsonl` | the same, Unseen | 490 | 490 | 8 (1.6%) | 2.8 MB |
+| `forcing_fig4_dose.png` | Figure 4: B labelled A and B correct against the number of labels given | | | | |
+| `forcing_fig4_tests.csv` | dose tests: each n = 1–4 against n = 0, and the per-image slope, for B=A and B correct | 6 | | | |
+| `forcing_output_check.jsonl` | hand check of 50 raw outputs: key, condition, automatic reading, verdict, note | 50 | | | |
+
+For the placement files, "at the limit" counts both calls whose thinking never closed and calls whose re-check after the label ran out of tokens. Table 4 counts only the first kind as cut, because the label it scores was already written in the second.
+
+- **Dose (`--n-given n`).** One-shot TF with only the first n labels, in box order (`obj1`..`objn` in `AAAAB`, `obj2`..`obj(n+1)` in `BAAAA`). n = 4 is the core TF one-shot run. n = 0 keeps the one-shot prompt and its `obj5:` cue (`obj1:` in `BAAAA`) with no labels, so comparing with n = 0 isolates the labels.
+- **Placement (`--prefix-place assistant`).** The same given line (true A labels for TF; for CF the same C as the core CF run) is written as the start of the model's answer, after its thinking ends and ending in `obj5:` (`obj1:` in `BAAAA`). The model continues from there. Table 4 scores the first label it writes; a second table gives what follows.
+- **Homogeneous control.** One-shot TF on Homogeneous items, asking box 5. All five objects share one class there, so following the labels is right.
+
+### How the finer runs were made
+
+The settings are the same as for the core runs (A40, vLLM 0.11.0, revision `ec4ebdc…`, `max_tokens` 8192, greedy, `--chunk 128`). The code is branch `rq2/forcing-probes`: commit `d1b7996` for dose and Homogeneous, and `25a0244` for placement (it gives the answer after the prefill the rest of the token budget).
+
+| job | run | split | code | elapsed |
+|---|---|---|---|---|
+| 65894194–65894197 | dose n = 0, 1, 2, 3 | Unseen | `d1b7996` | 41:24, 42:04, 40:23, 41:04 |
+| 65894200 | Homogeneous | Unseen | `d1b7996` | 19:23 |
+| 65894201–65894204 | dose n = 0, 1, 2, 3 | Seen | `d1b7996` | 18:55, 18:39, 18:14, 16:24 |
+| 65894207 | Homogeneous | Seen | `d1b7996` | 8:57 |
+| 65920347 | placement, TF one-shot + CF | Unseen | `25a0244` | 50:22 |
+| 65920349 | placement, TF one-shot + CF | Seen | `25a0244` | 59:34 |
+
+The standby jobs 65920348 and 65920350 found nothing left and exited within 8 s.
+
+```bash
+sbatch -A "$CSE595_ACCOUNT" -o "$CSE595_LOGS/%x-%j.out" -e "$CSE595_LOGS/%x-%j.err" \
+  --export=ALL,MODEL=mimo-rl-2508,SPLIT=validation,PROBES=teacher_forcing,SUBSETS="AAAAB BAAAA",EXTRA="--chunk 128 --n-given 2",OUT=$CSE595_RUNS/forcing_dose_mimo-rl-2508_validation.jsonl \
+  harness/scripts/run.sbatch
+# placement:   PROBES="teacher_forcing counterfactual", EXTRA="--chunk 128 --prefix-place assistant", OUT=.../forcing_place_mimo-rl-2508_<split>.jsonl
+# Homogeneous: PROBES=teacher_forcing, SUBSETS=homogenous, EXTRA="--chunk 128", OUT=.../forcing_homog_mimo-rl-2508_<split>.jsonl
+```
+
+**Integrity.** Every condition has exactly one row per ROPE entry in each subset (dose: each n; placement: TF and CF; 168 + 168 Seen and 334 + 334 Unseen Adversarial, 400 Seen and 490 Unseen Homogeneous). There are no duplicate keys and no broken lines.
+
+### Dose-response (Figure 4)
+
+B labelled A (%, tolerant) by the number of true A labels given before B. The slope is the per-image least-squares change in B=A per label (n = 0–4), with a permutation test that shuffles n within each image (10,000 reps). "4 vs 0" is paired, exact McNemar. Both are Holm-corrected per model and outcome, slopes and "4 vs 0" separately.
+
+| split | order | n = 0 | 1 | 2 | 3 | 4 | slope / label [CI] | Holm p | 4 vs 0 | Holm p |
+|---|---|---|---|---|---|---|---|---|---|---|
+| Unseen | AAAAB | 32.9 | 33.2 | 36.8 | 40.4 | 42.5 | **+2.6 [+1.7, +3.6]** | 6.0e-04 | **+9.6** | 1.3e-04 |
+| Unseen | BAAAA | 32.3 | 34.1 | 36.5 | 35.9 | 35.3 | +0.8 [−0.0, +1.6] | 0.10 | +3.0 | 1 |
+| Seen | AAAAB | 19.6 | 20.2 | 22.6 | 23.8 | 28.6 | **+2.1 [+0.9, +3.4]** | 0.0012 | +8.9 | 0.078 |
+| Seen | BAAAA | 18.5 | 20.8 | 20.8 | 20.8 | 21.4 | +0.6 [−0.3, +1.5] | 0.21 | +3.0 | 1 |
+
+With no labels (n = 0), B=A does not differ from `default` (Unseen `AAAAB` +3.6, `BAAAA` −0.3; Holm 1). B accuracy falls as labels are added when B is box 5 (−1.7 points per label Unseen, −2.3 Seen; Holm 0.0012 and 0.0015).
+
+![Figure 4](forcing_fig4_dose.png)
+
+### Placement: labels written as the model's own answer
+
+What the model writes after the forced line (%, tolerant, over all images). first = the label written right after the forced `objK:`, which Table 4 uses. kept writing = it went on after that label, usually "Wait, no, that's wrong" and a re-check. restarted = it wrote no label after `objK:` and began its own five-label list on a new line; these rows count in kept writing, and their first label counts as wrong and not A. final = B's last `objK: <class>` in the answer. cut = thinking never closed.
+
+| split | order | given | n | cut | first: B acc | first: B=A | first: B=C | kept writing | restarted | final: B acc | final: B=A | final: B=C |
+|---|---|---|---|---|---|---|---|---|---|---|---|---|
+| Unseen | AAAAB | true A (TF) | 334 | 31 | 38.0 | 32.6 | | 21.9 | 9.9 | 44.0 | 28.7 | |
+| Unseen | BAAAA | true A (TF) | 334 | 28 | 41.0 | 36.8 | | 31.1 | 4.5 | 42.5 | 32.9 | |
+| Unseen | AAAAB | C (CF) | 334 | 44 | 7.2 | 0.0 | **36.8** | 75.7 | 39.5 | 38.0 | 23.1 | 8.4 |
+| Unseen | BAAAA | C (CF) | 334 | 29 | 5.7 | 0.0 | **56.3** | 62.3 | 27.8 | 33.8 | 18.3 | 26.0 |
+| Seen | AAAAB | true A (TF) | 168 | 7 | 45.2 | 22.0 | | 17.9 | 13.1 | 53.6 | 20.8 | |
+| Seen | BAAAA | true A (TF) | 168 | 11 | 50.6 | 19.6 | | 25.6 | 8.9 | 53.0 | 19.6 | |
+| Seen | AAAAB | C (CF) | 168 | 8 | 12.5 | 0.0 | **31.5** | 78.0 | 50.0 | 51.2 | 16.7 | 7.7 |
+| Seen | BAAAA | C (CF) | 168 | 14 | 9.5 | 0.0 | **48.8** | 54.8 | 31.5 | 36.9 | 10.1 | 28.6 |
+
+For comparison on Unseen: `default` B=A is 29.3 (`AAAAB`) and 32.6 (`BAAAA`); the same true labels in the user turn give 42.5 and 35.3; and the same C in the user turn gives B=C 0.3 and 0.6. Placement with true labels does not differ from `default` in B=A (+3.3 and +4.2; Holm 0.71 and 0.38, placement family).
+
+### Homogeneous control
+
+Accuracy on box 5 (%, tolerant). The TF row is compared with `default` (paired, exact McNemar, Holm within the control family).
+
+| split | single | default | TF one-shot | TF vs default |
+|---|---|---|---|---|
+| Unseen | 78.2 | 80.4 | 86.9 | **+6.5** (Holm 1.7e-05) |
+| Seen | 85.0 | 87.0 | 96.0 | **+9.0** (Holm 6.0e-09) |
+
+### Hand check of 50 outputs
+
+The task doc asks to open 50 raw outputs per model and check whether the model continues from the given labels or rewrites the whole list. 25 rows per split were drawn with `random.Random(0)` from the finished one-shot calls of each condition (TF one-shot 4, CF 4, dose n = 1, 2, 3: 2 each, placement TF 4, placement CF 4, Homogeneous 3). Every row was read by hand; `forcing_output_check.jsonl` has the verdicts, and each matches the automatic reading.
+
+- **Labels in the user turn (34 rows).** The model never continues from the given labels. Every answer writes all five labels in box order, so with fewer than four given it labels the other boxes itself. In 6 of the 26 rows with true labels it changes at least one given label. In all 8 CF rows it replaces C with its own classes.
+- **Labels written as its answer (16 rows).** With true labels it continues on the same line and stops (8 of 8). With C it writes a label and then re-checks in 4 (the label is C in 2), and in 4 it writes nothing after `objK:` and starts its own list on a new line.
+
+### Notes for the team
+
+1. **The pull grows with each true label when B is box 5.** B=A rises by 2.6 points per label on Unseen `AAAAB` (2.1 on Seen), from 32.9% with none to 42.5% with all four. In `BAAAA` the slope is small and not significant. With no labels the one-shot prompt matches `default`.
+2. **True labels written as the model's answer barely move B.** Placed after the model's thinking, the same four A labels give B=A 32.6% on Unseen `AAAAB`, close to `default` and far below the 42.5% when they are in the user turn. The pull seems to act through the reasoning that follows the labels, not by copying in the answer line.
+3. **A wrong class written as the model's answer is copied onto B.** After four forced C labels, the first label for B is C in 31–56% of items, against at most 1.2% when C is in the user turn, and it is never A. The model often notices and re-checks, and by the end of the answer B=C falls to 8–29%.
+4. **Labels help when they are right.** On Homogeneous items the same probe raises accuracy on box 5 by 6.5 (Unseen) and 9.0 (Seen) points.
+5. **With labels in the user turn, the model always rewrites the whole list.** So the dose changes the labels in the prompt, not how many labels come before B in the answer.
 
 ## Smoke run (before the full run)
 
