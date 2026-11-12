@@ -5,7 +5,8 @@ Unit: the odd object B of each Adversarial image (box 5 in AAAAB, box 1 in BAAAA
 split and order, B is compared under every condition on the same images:
   single, default                   from results/*/rq1_*.jsonl
   TF incremental, TF one-shot, CF   from results/*/forcing_*.jsonl, plus the --n-given and
-                                    --prefix-place assistant variants of the one-shot probes
+                                    --prefix-place assistant variants of the one-shot probes, and
+                                    CF near / CF far (--cf-class: C most / least similar to A)
 Outcomes per B: correct; labelled A (inertia: the class of the other four objects); labelled C
 (counterfactual: the injected class). Rows with --budget, --no-think or non-greedy decoding are left out.
 Homogeneous control: when a forcing run on `homogenous` exists, box 5 (the object the one-shot probes
@@ -51,7 +52,7 @@ ORDERS = [("Adversarial", ("AAAAB", "BAAAA")), ("AAAAB", ("AAAAB",)), ("BAAAA", 
 # Homogeneous control: all five objects share one class, so following the given labels is correct.
 # The one-shot probes ask box 5 there; its rows appear only when a forcing run on homogenous exists.
 CONTROL = "Homogeneous control"
-BASE = ["single", "default", "TF incremental", "TF one-shot", "CF"]
+BASE = ["single", "default", "TF incremental", "TF one-shot", "CF", "CF near", "CF far"]
 
 
 def default_paths():
@@ -71,6 +72,8 @@ def condition(r):
     if p not in ("teacher_forcing", "counterfactual"):
         return None
     name = "TF one-shot" if p == "teacher_forcing" else "CF"
+    if p == "counterfactual" and r.get("cf_mode") in ("near", "far"):
+        name += " " + r["cf_mode"]  # C most / least similar to A (run.py --cf-class)
     if r.get("n_given") is not None and r["n_given"] != 4:
         name += f", given={r['n_given']}"
     if r.get("prefix_place", "user") == "assistant":

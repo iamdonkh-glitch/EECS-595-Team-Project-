@@ -170,3 +170,7 @@ def test_out_of_scope_rows_are_dropped():
     assert ft.condition(dict(r, variant="recommended,seed=0")) is None
     assert ft.b_record(dict(r, subset="mixed")) is None and ft.b_record(dict(r, subset="heterogenous")) is None
     assert ft.condition(row("counterfactual", "BAAAA", 0, B, cf=C, n_given=2, place="assistant")) == "CF, given=2, assistant"
+    cf = row("counterfactual", "AAAAB", 0, C, cf=C)
+    assert ft.condition(dict(cf, cf_mode="near")) == "CF near" and ft.condition(dict(cf, cf_mode="far")) == "CF far"
+    assert ft.condition(dict(cf, cf_mode="random")) == "CF" == ft.condition(cf)
+    assert ft.b_record(dict(cf, cf_mode="far"))["t"]["C"] == 1

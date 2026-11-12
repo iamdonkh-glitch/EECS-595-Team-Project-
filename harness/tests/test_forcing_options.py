@@ -5,9 +5,9 @@ import pytest
 
 from rope_runner import run
 from rope_runner.budget import run_prefilled
-from rope_runner.data import gold_labels
+from rope_runner.data import candidates, gold_labels
 from rope_runner.models import FakeModel
-from rope_runner.prompts import build_calls, multi_object_prompt
+from rope_runner.prompts import build_calls, class_cosine, counterfactual_class, multi_object_prompt
 from rope_runner.scoring import prefill_labels, tolerant_score
 from conftest import FIXTURE
 
@@ -147,3 +147,47 @@ def test_cli_rejects_bad_combinations(tmp_path):
     with pytest.raises(SystemExit):
         run.main(base + ["--probe", "counterfactual", "--prefix-place", "assistant", "--budget", "64",
                          "--out", str(tmp_path / "b.jsonl")])
+    with pytest.raises(SystemExit):
+        run.main(base + ["--probe", "teacher_forcing", "--cf-class", "near", "--out", str(tmp_path / "c.jsonl")])
+
+
+def test_cf_near_far(entries):
+    # every list in the table matches the candidate list, and the matrix is a cosine matrix
+    for split in ("train", "validation"):
+        for src in ("COCO", "ADE"):
+            cos = class_cosine(split, src)
+            assert list(cos) == [c.lower() for c in candidates(split, src)]
+            assert all(abs(cos[a][a] - 1) < 1e-3 and abs(cos[a][b] - cos[b][a]) <= 1e-4 for a in cos for b in cos)
+    for sub in ("AAAAB", "BAAAA"):
+        for e in entries[sub]:
+            g = gold_labels(e)
+            a = g[1] if sub == "BAAAA" else g[0]
+            present = {c.lower() for c in e["object_set"]} | set(g)
+            pool = [c.lower() for c in candidates("validation", e["data_source"]) if c.lower() not in present]
+            cos = class_cosine("validation", e["data_source"])
+            near = counterfactual_class(e, "validation", "k", mode="near")
+            far = counterfactual_class(e, "validation", "k", mode="far")
+            assert near in pool and far in pool and near != far
+            assert cos[a][near] == max(cos[a][c] for c in pool) and cos[a][far] == min(cos[a][c] for c in pool)
+            calls, meta = build_calls("counterfactual", e, "validation", image_key="k", subset=sub, cf_mode="near")
+            assert meta["counterfactual_class"] == near and calls[0]["prefix"].count(f": {near},") == 4
+    e = entries["AAAAB"][0]
+    # random stays the seeded draw it always was
+    assert counterfactual_class(e, "validation", "k") == counterfactual_class(e, "validation", "k", mode="random")
+    with pytest.raises(ValueError):
+        build_calls("teacher_forcing", e, "validation", subset="AAAAB", cf_mode="near")
+    with pytest.raises(ValueError):
+        counterfactual_class(e, "validation", "k", mode="middle")
+
+
+def test_dry_run_cf_class(tmp_path):
+    out = tmp_path / "cf.jsonl"
+    base = ["--model", "fake", "--split", "validation", "--subset", "AAAAB", "BAAAA", "--limit", "2",
+            "--data-dir", FIXTURE, "--out", str(out), "--dry-run", "--resume", "--greedy", "--probe", "counterfactual"]
+    for mode in ("random", "near", "far"):
+        run.main(base + ["--cf-class", mode])
+    rs = _rows(out)
+    assert len(rs) == 12 and len({r["key"] for r in rs}) == 12
+    for r in rs:
+        assert r["cf_mode"] in ("random", "near", "far")
+        assert ("cf=" in r["variant"]) == (r["cf_mode"] != "random")

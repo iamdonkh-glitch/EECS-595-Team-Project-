@@ -4,8 +4,12 @@ Prompt strings and the teacher-forcing cumulative logic are copied from sled-gro
 @ 9483f2e4a69a90aee339b2305c1f5866daeba1a0, evaluation.py (no license upstream; attribution
 only). Only the counterfactual prefix and the /no_think suffix are new.
 """
+import functools
 import hashlib
+import json
+import os
 import random
+from collections import Counter
 
 from .data import candidates, get_class_list, gold_labels
 
@@ -64,20 +68,45 @@ def cumulative_prompts(prompt, given_classes):
     return out
 
 
-def counterfactual_class(entry, split, image_key, seed=0):
-    """NEW. Draw the wrong class C with a fixed seed from the split's candidate list minus
-    every class in the image's object_set. Seeded per image, so the draw is order-independent."""
+CF_MODES = ["random", "near", "far"]
+SIMILARITY = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "configs",
+                          "class_similarity.json")
+
+
+@functools.lru_cache(maxsize=None)
+def class_cosine(split, data_source):
+    """NEW. {a: {c: cosine}} between the class names of one candidate list (configs/class_similarity.json,
+    made by scripts/class_similarity.py)."""
+    with open(SIMILARITY) as f:
+        t = json.load(f)["lists"][f"{split}/{data_source}"]
+    return {a: dict(zip(t["classes"], row)) for a, row in zip(t["classes"], t["cos"])}
+
+
+def counterfactual_class(entry, split, image_key, seed=0, mode="random"):
+    """NEW. The wrong class C, from the split's candidate list minus every class in the image's
+    object_set. random: drawn with a fixed seed per image, so the draw is order-independent.
+    near / far (finer direction): the remaining class whose name embedding is most / least similar
+    to A, the image's majority gold class (ties go to the earlier candidate)."""
     present = {c.lower() for c in entry["object_set"]} | set(gold_labels(entry))
     pool = [c for c in candidates(split, entry["data_source"]) if c.lower() not in present]
-    h = int(hashlib.sha256(f"{seed}|{split}|{image_key}".encode()).hexdigest(), 16)
-    return random.Random(h).choice(pool).lower()
+    if mode == "random":
+        h = int(hashlib.sha256(f"{seed}|{split}|{image_key}".encode()).hexdigest(), 16)
+        return random.Random(h).choice(pool).lower()
+    if mode not in CF_MODES:
+        raise ValueError(f"cf mode must be one of {CF_MODES}, got {mode}")
+    a = Counter(gold_labels(entry)).most_common(1)[0][0]
+    cos = class_cosine(split, entry["data_source"])
+    if a not in cos:
+        raise ValueError(f"class {a!r} is not in the {split}/{entry['data_source']} candidate list")
+    pick = max if mode == "near" else min
+    return pick(pool, key=lambda c: cos[a][c.lower()]).lower()
 
 
 PLACES = ["user", "assistant"]
 
 
 def build_calls(probe, entry, split, tf_mode="oneshot", no_think=False, image_key="", seed=0,
-                subset=None, n_given=None, place="user"):
+                subset=None, n_given=None, place="user", cf_mode="random"):
     """Return (calls, meta). calls = list of dicts {text, prefix, obj_index, prefill}; obj_index
     is the 1-based object each call asks about (None = all five). For one-shot teacher_forcing
     and counterfactual the asked object is B: object 5 on AAAAB (and non-adversarial subsets),
@@ -88,8 +117,12 @@ def build_calls(probe, entry, split, tf_mode="oneshot", no_think=False, image_ke
                None = all four (the default one-shot prompt).
       place    "user" = prefix appended to the user turn (moh placement, default);
                "assistant" = the user turn is the plain multi-object prompt and the prefix
-               (without its leading space) is the start of the model's own answer (`prefill`)."""
+               (without its leading space) is the start of the model's own answer (`prefill`).
+    NEW (counterfactual only):
+      cf_mode  "random" (default) / "near" / "far": how C is chosen; see counterfactual_class."""
     src = entry["data_source"]
+    if cf_mode != "random" and probe != "counterfactual":
+        raise ValueError("cf_mode applies to counterfactual only")
     gold = gold_labels(entry)
     meta = {}
     one_shot = probe == "counterfactual" or (probe == "teacher_forcing" and tf_mode == "oneshot")
@@ -109,7 +142,7 @@ def build_calls(probe, entry, split, tf_mode="oneshot", no_think=False, image_ke
         if probe == "teacher_forcing":
             given = gold[:4]
         else:
-            c = counterfactual_class(entry, split, image_key, seed)
+            c = counterfactual_class(entry, split, image_key, seed, cf_mode)
             meta["counterfactual_class"] = c
             given = [c] * 4
         if probe == "teacher_forcing" and tf_mode not in TF_MODES:
