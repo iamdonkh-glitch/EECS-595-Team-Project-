@@ -1,4 +1,4 @@
-% Forcing-probe section (RQ2), Xingjian Liu. DRAFT, 2026-11-12: MiMo-RL and Qwen-Instruct complete; MiMo-SFT without its RQ1 baseline; Qwen-Thinking running.
+% Forcing-probe section (RQ2), Xingjian Liu. DRAFT, 2026-11-12: MiMo-RL and Qwen-Instruct complete; MiMo-SFT without its RQ1 baseline; Qwen-Thinking core probes only (no RQ1 baseline yet; finer runs running).
 % Numbers marked \tbd wait for the other three models; MiMo-RL numbers are Unseen unless stated and
 % come from results/mimo-rl-2508/ (data branch rq2/forcing-results) via analysis/forcing_table.py.
 % Needs \usepackage{xcolor,booktabs,graphicx} and the proposal's references.bib.
@@ -46,10 +46,10 @@ Condition & AAAAB & BAAAA & AAAAB & BAAAA & AAAAB & BAAAA & AAAAB & BAAAA \\
 \midrule
 Single-object            & \tbd & \tbd & 18.9 & 24.0 & 20.1 & 22.8 & \tbd & \tbd \\
 Default                  & \tbd & \tbd & 29.3 & 32.6 & 35.9 & 25.1 & \tbd & \tbd \\
-TF incremental           & 51.2 & 32.9 & 40.7$^{*}$ & 33.2 & 41.0 & 25.4 & \tbd & \tbd \\
-TF one-shot              & 51.5 & 34.4 & 42.5$^{*}$ & 35.3 & 41.3 & 32.6$^{*}$ & \tbd & \tbd \\
-CF (B labelled A)        & 43.1 & 35.3 & 35.6$^{*}$ & 35.3 & 10.8$^{*}$ & 18.9$^{*}$ & \tbd & \tbd \\
-CF (B labelled C)        & 1.8 & 0.6 & 0.3 & 0.6 & 41.0 & 21.0 & \tbd & \tbd \\
+TF incremental           & 51.2 & 32.9 & 40.7$^{*}$ & 33.2 & 41.0 & 25.4 & 42.2 & 32.0 \\
+TF one-shot              & 51.5 & 34.4 & 42.5$^{*}$ & 35.3 & 41.3 & 32.6$^{*}$ & 41.6 & 36.2 \\
+CF (B labelled A)        & 43.1 & 35.3 & 35.6$^{*}$ & 35.3 & 10.8$^{*}$ & 18.9$^{*}$ & 33.8 & 34.4 \\
+CF (B labelled C)        & 1.8 & 0.6 & 0.3 & 0.6 & 41.0 & 21.0 & 0.9 & 1.8 \\
 TF one-shot, in answer   & 49.1 & 40.1 & 32.6 & 36.8 & 47.6$^{*}$ & 44.9$^{*}$ & \tbd & \tbd \\
 CF in answer (B labelled C) & 79.0 & 86.5 & 36.8 & 56.3 & 83.5 & 83.2 & \tbd & \tbd \\
 \bottomrule
@@ -57,8 +57,8 @@ CF in answer (B labelled C) & 79.0 & 86.5 & 36.8 & 56.3 & 83.5 & 83.2 & \tbd & \
 \caption{B labelled A (\%) on Unseen Adversarial items under each probe (tolerant parser; the two
 ``B labelled C'' rows give B labelled C instead). ``In answer'': the given labels are written as the
 start of the model's answer; the label scored is the first one it writes for B. $^{*}$: differs from
-Default, Holm-adjusted $p<0.05$ (exact McNemar, paired). MiMo-SFT has no Default or Single-object
-run yet (RQ1, \tbd), so its rows carry no test. For MiMo-RL, B=A under Default and every forcing probe differs from Single-object at Holm
+Default, Holm-adjusted $p<0.05$ (exact McNemar, paired). MiMo-SFT and Qwen-Thinking have no Default or
+Single-object run yet (RQ1, \tbd), so their rows carry no test. For MiMo-RL, B=A under Default and every forcing probe differs from Single-object at Holm
 $p<0.01$. Seen, accuracy and strict scores:
 Appendix~\tbd.}
 \label{tab:forcing}
@@ -88,7 +88,8 @@ given ones, so in AAAAB it writes A four times just before B, and in BAAAA it wr
 A hand check of 50 raw outputs agrees. All 34 with labels in the user turn rewrite the whole list:
 with fewer than four labels given the model labels the other boxes itself, in 6 of the 26 with true
 labels it changes at least one of them, and under CF it always replaces C with its own classes.
-MiMo-SFT answers the same way (all 34 rewrite the list). Qwen-Instruct does not. In 27 of 34 checked
+MiMo-SFT answers the same way (all 34 rewrite the list), and so does Qwen-Thinking: it writes all
+five labels in every answered row and never continues from the given ones. Qwen-Instruct does not. In 27 of 34 checked
 answers it continues from the given labels and writes B right after them. It is also pulled in
 BAAAA: one-shot teacher forcing raises B=A from 25.1\% to 32.6\% ($+7.5$, Holm $p<0.001$), and its
 dose slope there is 1.6 points per label ($p<0.001$). What matters is what the model has just written
@@ -100,7 +101,8 @@ under 2\% of answers. Instead the model relabels those boxes, mostly as A (64.1\
 of answers). B=A still rises on AAAAB ($+6.3$, Holm $p=0.04$). Here the A labels before B are the
 model's own, which is the self-induced part of RQ2. CF also changes the question (B is asked after
 four given labels), so this probe alone does not separate the two causes. MiMo-SFT behaves the same
-way (B labelled C in 0--2.4\% of items). Qwen-Instruct does not: it copies C onto B in 41.0\% of
+way (B labelled C in 0--2.4\% of items), and so does Qwen-Thinking (0.9--1.8\%; C survives on a given
+box in at most 2.5\% of answers, and 70--77\% relabel all four given boxes A). Qwen-Instruct does not: it copies C onto B in 41.0\% of
 AAAAB and 21.0\% of BAAAA items, and B=A falls well below Default.
 
 \paragraph{A wrong class close to A is accepted more, but B drifts the same.} Choosing C by its

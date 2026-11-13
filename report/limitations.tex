@@ -1,5 +1,6 @@
-% Limitations, Xingjian Liu. DRAFT, 2026-11-12: MiMo-SFT, MiMo-RL and Qwen-Instruct forcing runs done; the
-% \tbd parts wait for Qwen-Thinking, MiMo-SFT's RQ1 run and the teammates' sections.
+% Limitations, Xingjian Liu. DRAFT, 2026-11-12: MiMo-SFT, MiMo-RL and Qwen-Instruct forcing runs done,
+% Qwen-Thinking core probes done; the \tbd parts wait for the rest of Qwen-Thinking, the RQ1 runs of
+% MiMo-SFT and Qwen-Thinking, and the teammates' sections.
 % Needs xcolor (for \tbd) and the proposal's references.bib.
 \providecommand{\tbd}{\textcolor{red}{TBD}}
 
@@ -17,7 +18,9 @@ every comparison on the images where neither call was cut. The main effects keep
 (e.g.\ $+11.4$ instead of $+13.2$ points of B=A for one-shot teacher forcing on AAAAB), but small
 differences in accuracy should be read with this in mind. MiMo-SFT is cut in 1.3\% of one-shot
 teacher-forcing calls (at most 4.5\% in any forcing probe; its Default rate is \tbd), and
-Qwen-Instruct, which does not reason, almost never (5 of 3,340 incremental calls).
+Qwen-Instruct, which does not reason, almost never (5 of 3,340 incremental calls). Qwen-Thinking is
+cut in 6.3\% of one-shot, 8.1\% of CF and 9.1\% of incremental calls on Unseen items, all
+inside its reasoning (its Default rate is \tbd).
 
 \paragraph{The probes change more than the labels.} One-shot teacher forcing and the counterfactual
 prefix also change the question: B is asked after a list of given labels instead of inside one
