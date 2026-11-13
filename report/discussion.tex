@@ -1,6 +1,6 @@
 % Discussion, Xingjian Liu. DRAFT, 2026-11-12: written from the forcing probes of MiMo-SFT, MiMo-RL and
-% Qwen-Instruct, the core probes and Unseen dose of Qwen-Thinking (keyword count of its reasoning:
-% analysis/think_cite.py), and the RQ1 runs of MiMo-RL and Qwen-Instruct. \tbd marks what waits on Qwen-Thinking,
+% Qwen-Instruct, the core probes, dose and Unseen placement of Qwen-Thinking (keyword count of its reasoning:
+% analysis/think_cite.py; placement tests: analysis/place_tests.py), and the RQ1 runs of MiMo-RL and Qwen-Instruct. \tbd marks what waits on Qwen-Thinking,
 % MiMo-SFT's RQ1 run and the teammates' sections (RQ1 accuracy, budget sweep, error taxonomy).
 % Numbers are Unseen Adversarial unless stated; they come from results/<model>/forcing_tables.md and
 % results/<model>/box_swap.md on the data branch rq2/forcing-results.
@@ -43,11 +43,14 @@ explain the forcing effects, though: B's class is written on an A box in 9\% of 
 answers under one-shot teacher forcing on AAAAB, against 12\% under Default. The placement probe also
 points at the reasoning. On AAAAB, true labels written at the start of MiMo-RL's answer, after its
 reasoning, leave B=A at the Default level ($+3.3$ points, not significant), while the same labels
-placed before the reasoning raise it by 13.2. For a reasoning model, then, the place to look for
+placed before the reasoning raise it by 13.2. For MiMo-RL, then, the place to look for
 self-induced inertia is the reasoning itself. Whether the reasoning names B correctly before the
-answer turns to A is the think--answer analysis of Section~\tbd. Qwen-Thinking's pull in BAAAA
-points the same way; its placement run will show whether labels written after its reasoning are
-also harmless (\tbd).
+answer turns to A is the think--answer analysis of Section~\tbd. Qwen-Thinking shows both routes.
+Its pull in BAAAA, where B is the first label of its answer, cannot come from labels earlier in
+the answer (previous paragraph). Unlike MiMo-RL, it also follows its own answer line: true labels written at
+the start of its answer raise its B=A on AAAAB as much as labels in the user turn (44.9\% against
+41.6\%, 15.0 points above the one-shot prompt with no labels), and it never re-checks the forced
+line. A reasoning model can thus carry this inertia in its reasoning, in its answer, or in both.
 
 \paragraph{RL adds a re-check, but the pull remains.} MiMo-SFT and MiMo-RL share their base model,
 so their differences come from RL training. Two things differ clearly. First, only MiMo-RL
