@@ -2,13 +2,14 @@
 
 Xingjian Liu's RQ2 forcing runs of Qwen3-VL-8B-Thinking on Adversarial ROPE (`AAAAB`, `BAAAA`; Seen = `train`, Unseen = `validation`) and the Homogeneous control. The probes, scoring and statistics are the same as for MiMo-VL-7B-RL-2508; `results/mimo-rl-2508/README.md` (section "RQ2 forcing probes" and after) describes them in full.
 
-**What this folder has.** The core probes (TF one-shot, TF incremental, CF), the dose series, placement, the Homogeneous control, and the 50-output hand check. **C near / far are still running** on Great Lakes. They will be added here with the final tables.
+**What this folder has.** Every forcing run of this model: the core probes (TF one-shot, TF incremental, CF), the dose series, placement, the Homogeneous control and C near / far, plus the 50-output hand check.
 
 **The RQ1 baseline of this model is not in yet** (Zhongqi's run). Until its `rq1_qwen3vl-8b-thinking_*` files are in this folder, the tables here give:
 - the rates under each probe;
 - the dose tests (each n against n = 0);
 - placement, tested by `forcing_place_tests.md` against the same labels in the user turn and against n = 0;
-- the given-box table.
+- the given-box table;
+- C near / far against random C.
 
 They give no comparison with `default` or `single`. Once the RQ1 files arrive, the same command rebuilds every table with those comparisons.
 
@@ -22,6 +23,8 @@ They give no comparison with `default` or `single`. Once the RQ1 files arrive, t
 | `forcing_dose_qwen3vl-8b-thinking_{train,validation}.jsonl` | one-shot TF with only the first n of the four labels (n = 0–3) | 1,344 / 2,672 | same | 84 / 248 | 12.9 / 32.7 MB |
 | `forcing_place_qwen3vl-8b-thinking_{train,validation}.jsonl` | TF one-shot and CF with the labels written as the start of the model's answer, after its reasoning | 672 / 1,336 | same | 52 / 146 | 6.9 / 17.0 MB |
 | `forcing_homog_qwen3vl-8b-thinking_{train,validation}.jsonl` | one-shot TF on Homogeneous (`homogenous`) | 400 / 490 | same | 4 / 18 | 1.5 / 3.0 MB |
+| `forcing_cfnear_qwen3vl-8b-thinking_{train,validation}.jsonl` | CF with C = the remaining class most similar to A | 336 / 668 | same | 18 / 48 | 3.1 / 7.5 MB |
+| `forcing_cffar_qwen3vl-8b-thinking_{train,validation}.jsonl` | CF with C = the remaining class least similar to A | 336 / 668 | same | 18 / 59 | 3.2 / 7.8 MB |
 | `forcing_tables.md` | full output of `analysis/forcing_table.py` on every forcing file here | | | | |
 | `forcing_table4.csv` | Table 4 rates with CIs, one line per split x order x condition (no comparison with `default` yet) | | | | |
 | `forcing_fig4_tests.csv`, `forcing_fig4_dose.png` | dose tests and Figure 4 for this model | | | | |
@@ -33,7 +36,7 @@ They give no comparison with `default` or `single`. Once the RQ1 files arrive, t
 - Every condition has exactly one row per ROPE entry in each subset: 168 + 168 Seen and 334 + 334 Unseen Adversarial, 400 Seen and 490 Unseen Homogeneous.
 - There are no duplicate keys and no broken lines.
 
-On 2026-11-13 the home quota on Great Lakes filled during the C near run. That run is not in this folder yet. It is being redone from its last good row, and none of the files here was written in that window.
+On 2026-11-13 the home quota on Great Lakes filled during the Unseen C near run (job 65950485). The job failed, and its file had a 1 MiB block of null bytes where about 40 rows had been. We kept the 170 rows that parse and redid the rest with `--resume` (job 66042264). The other runs of this model have no null bytes, and every file here passes the integrity check.
 
 **Calls at the token limit.** On Unseen items these calls reach 8,192 tokens (Seen in parentheses):
 - one-shot: 6.3% (2.4%)
@@ -42,6 +45,7 @@ On 2026-11-13 the home quota on Great Lakes filled during the C near run. That r
 - dose: 7.2–12.3% per n and order (3.0–8.9%)
 - placement: 9.9–12.9% (6.0–10.1%)
 - Homogeneous: 3.7% (1.0%)
+- C near / far: 7.2 / 8.8% (5.4 / 5.4%)
 
 Every one of them is still inside its reasoning: none closed `</think>`, and the answer is empty. In the incremental runs they are spread over all five calls (25–38 calls per box and order on Unseen). In placement a cut call never reached the forced labels. The harness never closed the reasoning by force. As for the other models, a cut call is scored wrong and never A.
 
@@ -69,9 +73,13 @@ Every one of them is still inside its reasoning: none closed `</think>`, and the
 | 65950475–65950477, 65950481 | dose n = 0, 1, 2, 3 | Seen | 18:43, 19:59, 19:47, 19:08 |
 | 65950482 | placement (TF one-shot + CF) | Seen | 42:08 |
 | 65950484 | Homogeneous | Seen | 14:12 |
+| 65950485, 66042264 | C near | Unseen | 16:19 (failed, see Integrity), 28:11 |
+| 65950486 | C far | Unseen | 42:35 |
+| 65950487 | C near | Seen | 19:22 |
+| 65950488 | C far | Seen | 19:19 |
 
 **Notes on the jobs:**
-- Every piece finished within its first job.
+- Every piece finished within its first job, except Unseen C near (Integrity, above).
 - The standby jobs (65950452, 65950460, 65950462, 65950464, 65950473, 65950483) found nothing left and exited within 8 s.
 - Smoke test 65950440 (placement, 16 images) ran first.
 - The commands are those of `results/mimo-rl-2508/README.md` with `MODEL=qwen3vl-8b-thinking`.
@@ -152,6 +160,19 @@ Over answered rows:
 
 These are rare under the forcing probes. 0–2% of B=A answers write B's class on an A box (`box_swap.md`). The `default` share needs the RQ1 files.
 
+### C near / far
+
+These tests pool both orders and pair each condition with random C on the same images. Holm adjusts over the model's 18 near / far comparisons.
+
+- **Near C is copied onto B more often.** B is labelled C in 3.7% (Unseen) and 7.4% (Seen) of items with near C, against 1.3 / 1.5% with random C and 0.4 / 1.8% with far C.
+  - Near against far: +3.3 points on Unseen (Holm 5.4e-05) and +5.7 on Seen (Holm 0.008).
+  - Near against random: +2.4 on Unseen (Holm 0.07) and +6.0 on Seen (Holm 0.001).
+  - Far does not differ from random.
+- **Near C also survives on the given boxes more often:** on at least one given box in 12.3% (Unseen) and 25.5% (Seen) of answers, against 0.8 / 3.8% with far C.
+- **B=A does not differ between the three** (every Holm p = 1).
+
+This is the same pattern as MiMo-VL-7B-RL and MiMo-VL-7B-SFT.
+
 ### Hand check of 50 outputs
 
 The sample design is the same as for MiMo-VL-7B-RL: 25 rows per split, `random.Random(0)`, finished one-shot calls. Every row was read by hand, and `forcing_output_check.jsonl` has the verdicts.
@@ -170,6 +191,6 @@ The sample design is the same as for MiMo-VL-7B-RL: 25 rows per split, `random.R
    - True labels written at the start of its answer pull B to A as much as labels in the user turn: on `AAAAB`, +15.0 (Unseen) and +9.5 (Seen) points over no labels.
    - It never re-checks a forced line.
    - After four forced C labels, B is C in 45–64% of items.
-3. **It rejects a wrong class in the user turn.** Under CF, B is labelled C in 0.9–1.8% of items (Qwen-Instruct: 15.5–41.0%), and C survives on a given box in at most 2.5% of answers. As with MiMo, the given boxes are mostly relabelled A.
+3. **It rejects a wrong class in the user turn.** Under CF, B is labelled C in 0.9–1.8% of items (Qwen-Instruct: 15.5–41.0%), and C survives on a given box in at most 2.5% of answers. As with MiMo, the given boxes are mostly relabelled A. A C close to A is accepted somewhat more often (B=C 3.7–7.4%), but B=A does not move.
 4. **True labels pull more than wrong ones.** On Unseen `AAAAB`, B=A is 41.6% with four true A labels. With four C labels that the model then relabels A itself, it is 33.8%. This comparison is paired: 38 images are A only under TF and 12 only under CF, exact McNemar p = 3.1e-04, not adjusted. On Seen the gap is smaller and not significant (32.7 against 28.6%, p = 0.23).
 5. **Cut calls are 6–13% on Unseen**, all inside the reasoning. They lower B accuracy and B=A alike. The dose and placement effects above hold on the images where neither call was cut. Compare conditions on the uncut images too once `default` is in.

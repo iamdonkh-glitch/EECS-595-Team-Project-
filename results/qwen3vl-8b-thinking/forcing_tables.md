@@ -1,6 +1,6 @@
 # RQ2 forcing probes
 
-Files (12): forcing_dose_qwen3vl-8b-thinking_train.jsonl, forcing_dose_qwen3vl-8b-thinking_validation.jsonl, forcing_homog_qwen3vl-8b-thinking_train.jsonl, forcing_homog_qwen3vl-8b-thinking_validation.jsonl, forcing_place_qwen3vl-8b-thinking_train.jsonl, forcing_place_qwen3vl-8b-thinking_validation.jsonl, forcing_qwen3vl-8b-thinking_cf_train.jsonl, forcing_qwen3vl-8b-thinking_cf_validation.jsonl, forcing_qwen3vl-8b-thinking_tf-incremental_train.jsonl, forcing_qwen3vl-8b-thinking_tf-incremental_validation.jsonl, forcing_qwen3vl-8b-thinking_tf-oneshot_train.jsonl, forcing_qwen3vl-8b-thinking_tf-oneshot_validation.jsonl
+Files (16): forcing_cffar_qwen3vl-8b-thinking_train.jsonl, forcing_cffar_qwen3vl-8b-thinking_validation.jsonl, forcing_cfnear_qwen3vl-8b-thinking_train.jsonl, forcing_cfnear_qwen3vl-8b-thinking_validation.jsonl, forcing_dose_qwen3vl-8b-thinking_train.jsonl, forcing_dose_qwen3vl-8b-thinking_validation.jsonl, forcing_homog_qwen3vl-8b-thinking_train.jsonl, forcing_homog_qwen3vl-8b-thinking_validation.jsonl, forcing_place_qwen3vl-8b-thinking_train.jsonl, forcing_place_qwen3vl-8b-thinking_validation.jsonl, forcing_qwen3vl-8b-thinking_cf_train.jsonl, forcing_qwen3vl-8b-thinking_cf_validation.jsonl, forcing_qwen3vl-8b-thinking_tf-incremental_train.jsonl, forcing_qwen3vl-8b-thinking_tf-incremental_validation.jsonl, forcing_qwen3vl-8b-thinking_tf-oneshot_train.jsonl, forcing_qwen3vl-8b-thinking_tf-oneshot_validation.jsonl
 
 ## Table 4: the odd object B under each condition (%)
 
@@ -11,6 +11,8 @@ B acc = B named correctly; B=A = B given the class of the other four (inertia); 
 | qwen3vl-8b-thinking | Seen | Adversarial | TF incremental | 336 | 14 | 48.5 (46.4) [43.2, 53.9] | 27.7 (26.2) [22.9, 32.4] | - | - | - | - | - |
 | qwen3vl-8b-thinking | Seen | Adversarial | TF one-shot | 336 | 8 | 47.9 (47.9) [42.6, 53.3] | 31.2 (31.2) [26.5, 36.3] | - | - | - | - | - |
 | qwen3vl-8b-thinking | Seen | Adversarial | CF | 336 | 17 | 51.2 (51.2) [45.8, 56.8] | 26.5 (26.5) [22.0, 31.0] | 1.5 (1.5) | - | - | - | - |
+| qwen3vl-8b-thinking | Seen | Adversarial | CF near | 336 | 18 | 47.3 (47.3) [42.0, 52.4] | 23.8 (23.8) [19.3, 28.3] | 7.4 (7.4) | - | - | - | - |
+| qwen3vl-8b-thinking | Seen | Adversarial | CF far | 336 | 18 | 50.0 (50.0) [44.6, 55.7] | 27.1 (27.1) [22.3, 31.8] | 1.8 (1.8) | - | - | - | - |
 | qwen3vl-8b-thinking | Seen | Adversarial | CF, assistant | 336 | 21 | 30.1 (30.1) [25.0, 34.8] | 0.3 (0.3) [0.0, 0.9] | 51.8 (51.8) | - | - | - | - |
 | qwen3vl-8b-thinking | Seen | Adversarial | TF one-shot, assistant | 336 | 31 | 46.7 (46.7) [41.1, 52.1] | 27.4 (27.4) [22.6, 32.4] | - | - | - | - | - |
 | qwen3vl-8b-thinking | Seen | Adversarial | TF one-shot, given=0 | 336 | 19 | 52.7 (52.7) [47.3, 58.0] | 20.2 (20.2) [16.1, 24.7] | - | - | - | - | - |
@@ -20,6 +22,8 @@ B acc = B named correctly; B=A = B given the class of the other four (inertia); 
 | qwen3vl-8b-thinking | Seen | AAAAB | TF incremental | 168 | 3 | 45.8 (41.7) [38.1, 53.6] | 33.3 (30.4) [26.2, 40.5] | - | - | - | - | - |
 | qwen3vl-8b-thinking | Seen | AAAAB | TF one-shot | 168 | 5 | 46.4 (46.4) [38.7, 53.6] | 32.7 (32.7) [25.6, 39.9] | - | - | - | - | - |
 | qwen3vl-8b-thinking | Seen | AAAAB | CF | 168 | 8 | 50.0 (50.0) [42.3, 57.1] | 28.6 (28.6) [22.0, 35.7] | 1.8 (1.8) | - | - | - | - |
+| qwen3vl-8b-thinking | Seen | AAAAB | CF near | 168 | 7 | 47.0 (47.0) [39.3, 54.2] | 23.8 (23.8) [17.9, 29.8] | 8.3 (8.3) | - | - | - | - |
+| qwen3vl-8b-thinking | Seen | AAAAB | CF far | 168 | 10 | 45.8 (45.8) [38.7, 53.6] | 29.8 (29.8) [23.2, 36.9] | 2.4 (2.4) | - | - | - | - |
 | qwen3vl-8b-thinking | Seen | AAAAB | CF, assistant | 168 | 10 | 25.0 (25.0) [18.5, 31.5] | 0.0 (0.0) [0.0, 0.0] | 58.9 (58.9) | - | - | - | - |
 | qwen3vl-8b-thinking | Seen | AAAAB | TF one-shot, assistant | 168 | 14 | 44.0 (44.0) [36.9, 51.8] | 30.4 (30.4) [23.8, 37.5] | - | - | - | - | - |
 | qwen3vl-8b-thinking | Seen | AAAAB | TF one-shot, given=0 | 168 | 5 | 54.2 (54.2) [46.4, 61.9] | 20.8 (20.8) [14.9, 27.4] | - | - | - | - | - |
@@ -29,6 +33,8 @@ B acc = B named correctly; B=A = B given the class of the other four (inertia); 
 | qwen3vl-8b-thinking | Seen | BAAAA | TF incremental | 168 | 11 | 51.2 (51.2) [43.5, 58.3] | 22.0 (22.0) [16.1, 28.0] | - | - | - | - | - |
 | qwen3vl-8b-thinking | Seen | BAAAA | TF one-shot | 168 | 3 | 49.4 (49.4) [41.7, 57.1] | 29.8 (29.8) [22.6, 36.9] | - | - | - | - | - |
 | qwen3vl-8b-thinking | Seen | BAAAA | CF | 168 | 9 | 52.4 (52.4) [44.6, 59.5] | 24.4 (24.4) [17.9, 31.0] | 1.2 (1.2) | - | - | - | - |
+| qwen3vl-8b-thinking | Seen | BAAAA | CF near | 168 | 11 | 47.6 (47.6) [39.9, 55.4] | 23.8 (23.8) [17.3, 31.0] | 6.5 (6.5) | - | - | - | - |
+| qwen3vl-8b-thinking | Seen | BAAAA | CF far | 168 | 8 | 54.2 (54.2) [46.4, 61.3] | 24.4 (24.4) [17.9, 31.0] | 1.2 (1.2) | - | - | - | - |
 | qwen3vl-8b-thinking | Seen | BAAAA | CF, assistant | 168 | 11 | 35.1 (35.1) [28.0, 42.3] | 0.6 (0.6) [0.0, 1.8] | 44.6 (44.6) | - | - | - | - |
 | qwen3vl-8b-thinking | Seen | BAAAA | TF one-shot, assistant | 168 | 17 | 49.4 (49.4) [41.7, 57.1] | 24.4 (24.4) [18.5, 31.0] | - | - | - | - | - |
 | qwen3vl-8b-thinking | Seen | BAAAA | TF one-shot, given=0 | 168 | 14 | 51.2 (51.2) [44.0, 58.3] | 19.6 (19.6) [13.7, 25.6] | - | - | - | - | - |
@@ -39,6 +45,8 @@ B acc = B named correctly; B=A = B given the class of the other four (inertia); 
 | qwen3vl-8b-thinking | Unseen | Adversarial | TF incremental | 668 | 63 | 40.9 (38.2) [37.3, 44.8] | 37.1 (34.3) [33.5, 40.6] | - | - | - | - | - |
 | qwen3vl-8b-thinking | Unseen | Adversarial | TF one-shot | 668 | 42 | 40.9 (40.9) [37.3, 44.8] | 38.9 (38.9) [35.2, 42.5] | - | - | - | - | - |
 | qwen3vl-8b-thinking | Unseen | Adversarial | CF | 668 | 54 | 39.7 (39.7) [35.9, 43.4] | 34.1 (34.1) [30.7, 37.7] | 1.3 (1.3) | - | - | - | - |
+| qwen3vl-8b-thinking | Unseen | Adversarial | CF near | 668 | 48 | 40.0 (40.0) [36.2, 43.4] | 34.4 (34.4) [30.7, 38.2] | 3.7 (3.7) | - | - | - | - |
+| qwen3vl-8b-thinking | Unseen | Adversarial | CF far | 668 | 59 | 39.4 (39.4) [35.8, 43.3] | 34.4 (34.4) [31.0, 37.9] | 0.4 (0.4) | - | - | - | - |
 | qwen3vl-8b-thinking | Unseen | Adversarial | CF, assistant | 668 | 76 | 23.7 (23.7) [20.4, 26.9] | 0.1 (0.1) [0.0, 0.4] | 58.7 (58.7) | - | - | - | - |
 | qwen3vl-8b-thinking | Unseen | Adversarial | TF one-shot, assistant | 668 | 70 | 38.9 (38.9) [35.3, 42.7] | 39.5 (39.5) [35.9, 43.1] | - | - | - | - | - |
 | qwen3vl-8b-thinking | Unseen | Adversarial | TF one-shot, given=0 | 668 | 65 | 43.9 (43.9) [40.3, 47.6] | 30.2 (30.2) [26.8, 33.7] | - | - | - | - | - |
@@ -48,6 +56,8 @@ B acc = B named correctly; B=A = B given the class of the other four (inertia); 
 | qwen3vl-8b-thinking | Unseen | AAAAB | TF incremental | 334 | 26 | 38.3 (32.9) [32.9, 43.7] | 42.2 (36.5) [36.8, 47.6] | - | - | - | - | - |
 | qwen3vl-8b-thinking | Unseen | AAAAB | TF one-shot | 334 | 20 | 38.9 (38.9) [33.8, 44.3] | 41.6 (41.6) [36.5, 46.7] | - | - | - | - | - |
 | qwen3vl-8b-thinking | Unseen | AAAAB | CF | 334 | 20 | 41.9 (41.9) [36.5, 47.3] | 33.8 (33.8) [29.0, 38.9] | 0.9 (0.9) | - | - | - | - |
+| qwen3vl-8b-thinking | Unseen | AAAAB | CF near | 334 | 26 | 38.3 (38.3) [33.5, 43.4] | 35.0 (35.0) [29.9, 40.4] | 5.4 (5.4) | - | - | - | - |
+| qwen3vl-8b-thinking | Unseen | AAAAB | CF far | 334 | 26 | 38.6 (38.6) [33.2, 44.0] | 34.7 (34.7) [29.9, 39.5] | 0.6 (0.6) | - | - | - | - |
 | qwen3vl-8b-thinking | Unseen | AAAAB | CF, assistant | 334 | 43 | 17.7 (17.7) [13.8, 21.6] | 0.0 (0.0) [0.0, 0.0] | 64.4 (64.4) | - | - | - | - |
 | qwen3vl-8b-thinking | Unseen | AAAAB | TF one-shot, assistant | 334 | 34 | 35.9 (35.9) [30.8, 41.3] | 44.9 (44.9) [39.5, 50.3] | - | - | - | - | - |
 | qwen3vl-8b-thinking | Unseen | AAAAB | TF one-shot, given=0 | 334 | 32 | 44.3 (44.3) [39.2, 49.4] | 29.9 (29.9) [25.1, 35.0] | - | - | - | - | - |
@@ -57,6 +67,8 @@ B acc = B named correctly; B=A = B given the class of the other four (inertia); 
 | qwen3vl-8b-thinking | Unseen | BAAAA | TF incremental | 334 | 37 | 43.4 (43.4) [38.0, 48.8] | 32.0 (32.0) [26.9, 36.8] | - | - | - | - | - |
 | qwen3vl-8b-thinking | Unseen | BAAAA | TF one-shot | 334 | 22 | 42.8 (42.8) [37.7, 48.2] | 36.2 (36.2) [31.1, 41.3] | - | - | - | - | - |
 | qwen3vl-8b-thinking | Unseen | BAAAA | CF | 334 | 34 | 37.4 (37.4) [32.3, 42.5] | 34.4 (34.4) [29.6, 39.5] | 1.8 (1.8) | - | - | - | - |
+| qwen3vl-8b-thinking | Unseen | BAAAA | CF near | 334 | 22 | 41.6 (41.6) [36.5, 47.0] | 33.8 (33.8) [29.0, 38.9] | 2.1 (2.1) | - | - | - | - |
+| qwen3vl-8b-thinking | Unseen | BAAAA | CF far | 334 | 33 | 40.1 (40.1) [34.7, 45.2] | 34.1 (34.1) [29.0, 39.2] | 0.3 (0.3) | - | - | - | - |
 | qwen3vl-8b-thinking | Unseen | BAAAA | CF, assistant | 334 | 33 | 29.6 (29.6) [24.9, 34.7] | 0.3 (0.3) [0.0, 0.9] | 53.0 (53.0) | - | - | - | - |
 | qwen3vl-8b-thinking | Unseen | BAAAA | TF one-shot, assistant | 334 | 36 | 41.9 (41.9) [37.1, 47.3] | 34.1 (34.1) [29.0, 39.2] | - | - | - | - | - |
 | qwen3vl-8b-thinking | Unseen | BAAAA | TF one-shot, given=0 | 334 | 33 | 43.4 (43.4) [38.0, 48.8] | 30.5 (30.5) [25.7, 35.6] | - | - | - | - | - |
@@ -92,18 +104,24 @@ Over answered rows (calls for B not cut), tolerant parse, last objK: mention per
 |---|---|---|---|---|---|---|---|---|---|
 | qwen3vl-8b-thinking | Seen | Adversarial | TF one-shot | 328 | 0.0 | 100.0 | 92.7 | 92.7 | - |
 | qwen3vl-8b-thinking | Seen | Adversarial | CF | 319 | 0.0 | 100.0 | 1.3 | 76.2 | 1.9 |
+| qwen3vl-8b-thinking | Seen | Adversarial | CF near | 318 | 0.0 | 100.0 | 19.5 | 61.3 | 25.5 |
+| qwen3vl-8b-thinking | Seen | Adversarial | CF far | 318 | 0.0 | 100.0 | 1.6 | 71.1 | 3.8 |
 | qwen3vl-8b-thinking | Seen | Adversarial | TF one-shot, given=0 | 317 | 0.0 | - | - | - | - |
 | qwen3vl-8b-thinking | Seen | Adversarial | TF one-shot, given=1 | 314 | 0.0 | 100.0 | 92.4 | 92.4 | - |
 | qwen3vl-8b-thinking | Seen | Adversarial | TF one-shot, given=2 | 312 | 0.0 | 100.0 | 92.0 | 92.0 | - |
 | qwen3vl-8b-thinking | Seen | Adversarial | TF one-shot, given=3 | 317 | 0.0 | 100.0 | 93.7 | 93.7 | - |
 | qwen3vl-8b-thinking | Seen | AAAAB | TF one-shot | 163 | 0.0 | 100.0 | 94.5 | 94.5 | - |
 | qwen3vl-8b-thinking | Seen | AAAAB | CF | 160 | 0.0 | 100.0 | 2.5 | 76.9 | 2.5 |
+| qwen3vl-8b-thinking | Seen | AAAAB | CF near | 161 | 0.0 | 100.0 | 22.4 | 58.4 | 29.2 |
+| qwen3vl-8b-thinking | Seen | AAAAB | CF far | 158 | 0.0 | 100.0 | 1.9 | 72.2 | 3.8 |
 | qwen3vl-8b-thinking | Seen | AAAAB | TF one-shot, given=0 | 163 | 0.0 | - | - | - | - |
 | qwen3vl-8b-thinking | Seen | AAAAB | TF one-shot, given=1 | 157 | 0.0 | 100.0 | 93.6 | 93.6 | - |
 | qwen3vl-8b-thinking | Seen | AAAAB | TF one-shot, given=2 | 153 | 0.0 | 100.0 | 94.1 | 94.1 | - |
 | qwen3vl-8b-thinking | Seen | AAAAB | TF one-shot, given=3 | 158 | 0.0 | 100.0 | 94.9 | 94.9 | - |
 | qwen3vl-8b-thinking | Seen | BAAAA | TF one-shot | 165 | 0.0 | 100.0 | 90.9 | 90.9 | - |
 | qwen3vl-8b-thinking | Seen | BAAAA | CF | 159 | 0.0 | 100.0 | 0.0 | 75.5 | 1.3 |
+| qwen3vl-8b-thinking | Seen | BAAAA | CF near | 157 | 0.0 | 100.0 | 16.6 | 64.3 | 21.7 |
+| qwen3vl-8b-thinking | Seen | BAAAA | CF far | 160 | 0.0 | 100.0 | 1.2 | 70.0 | 3.8 |
 | qwen3vl-8b-thinking | Seen | BAAAA | TF one-shot, given=0 | 154 | 0.0 | - | - | - | - |
 | qwen3vl-8b-thinking | Seen | BAAAA | TF one-shot, given=1 | 157 | 0.0 | 100.0 | 91.1 | 91.1 | - |
 | qwen3vl-8b-thinking | Seen | BAAAA | TF one-shot, given=2 | 159 | 0.0 | 100.0 | 89.9 | 89.9 | - |
@@ -111,23 +129,54 @@ Over answered rows (calls for B not cut), tolerant parse, last objK: mention per
 | qwen3vl-8b-thinking | Seen | Homogeneous control | TF one-shot | 396 | 0.0 | 100.0 | 96.7 | 96.7 | - |
 | qwen3vl-8b-thinking | Unseen | Adversarial | TF one-shot | 626 | 0.0 | 100.0 | 85.6 | 85.6 | - |
 | qwen3vl-8b-thinking | Unseen | Adversarial | CF | 614 | 0.0 | 100.0 | 1.3 | 71.0 | 2.4 |
+| qwen3vl-8b-thinking | Unseen | Adversarial | CF near | 620 | 0.0 | 100.0 | 7.7 | 66.5 | 12.3 |
+| qwen3vl-8b-thinking | Unseen | Adversarial | CF far | 609 | 0.0 | 100.0 | 0.5 | 71.4 | 0.8 |
 | qwen3vl-8b-thinking | Unseen | Adversarial | TF one-shot, given=0 | 603 | 0.0 | - | - | - | - |
 | qwen3vl-8b-thinking | Unseen | Adversarial | TF one-shot, given=1 | 599 | 0.0 | 100.0 | 86.6 | 86.6 | - |
 | qwen3vl-8b-thinking | Unseen | Adversarial | TF one-shot, given=2 | 606 | 0.0 | 100.0 | 85.5 | 85.5 | - |
 | qwen3vl-8b-thinking | Unseen | Adversarial | TF one-shot, given=3 | 616 | 0.0 | 100.0 | 86.4 | 86.4 | - |
 | qwen3vl-8b-thinking | Unseen | AAAAB | TF one-shot | 314 | 0.0 | 100.0 | 87.3 | 87.3 | - |
 | qwen3vl-8b-thinking | Unseen | AAAAB | CF | 314 | 0.0 | 100.0 | 1.3 | 69.7 | 2.5 |
+| qwen3vl-8b-thinking | Unseen | AAAAB | CF near | 308 | 0.0 | 100.0 | 9.4 | 64.6 | 14.6 |
+| qwen3vl-8b-thinking | Unseen | AAAAB | CF far | 308 | 0.0 | 100.0 | 0.6 | 70.5 | 1.3 |
 | qwen3vl-8b-thinking | Unseen | AAAAB | TF one-shot, given=0 | 302 | 0.0 | - | - | - | - |
 | qwen3vl-8b-thinking | Unseen | AAAAB | TF one-shot, given=1 | 306 | 0.0 | 100.0 | 86.9 | 86.9 | - |
 | qwen3vl-8b-thinking | Unseen | AAAAB | TF one-shot, given=2 | 310 | 0.0 | 100.0 | 85.5 | 85.5 | - |
 | qwen3vl-8b-thinking | Unseen | AAAAB | TF one-shot, given=3 | 309 | 0.0 | 100.0 | 87.4 | 87.4 | - |
 | qwen3vl-8b-thinking | Unseen | BAAAA | TF one-shot | 312 | 0.0 | 100.0 | 84.0 | 84.0 | - |
 | qwen3vl-8b-thinking | Unseen | BAAAA | CF | 300 | 0.0 | 100.0 | 1.3 | 72.3 | 2.3 |
+| qwen3vl-8b-thinking | Unseen | BAAAA | CF near | 312 | 0.0 | 100.0 | 6.1 | 68.3 | 9.9 |
+| qwen3vl-8b-thinking | Unseen | BAAAA | CF far | 301 | 0.0 | 100.0 | 0.3 | 72.4 | 0.3 |
 | qwen3vl-8b-thinking | Unseen | BAAAA | TF one-shot, given=0 | 301 | 0.0 | - | - | - | - |
 | qwen3vl-8b-thinking | Unseen | BAAAA | TF one-shot, given=1 | 293 | 0.0 | 100.0 | 86.3 | 86.3 | - |
 | qwen3vl-8b-thinking | Unseen | BAAAA | TF one-shot, given=2 | 296 | 0.0 | 100.0 | 85.5 | 85.5 | - |
 | qwen3vl-8b-thinking | Unseen | BAAAA | TF one-shot, given=3 | 307 | 0.0 | 100.0 | 85.3 | 85.3 | - |
 | qwen3vl-8b-thinking | Unseen | Homogeneous control | TF one-shot | 472 | 0.0 | 100.0 | 90.9 | 90.9 | - |
+
+## C near / far: does a C closer to A get copied more?
+
+Paired on the same images, y - x in points, tolerant; B=C = B given the injected class of that condition. Exact McNemar, Holm per model and outcome over these comparisons.
+
+| model | split | order | x | y | n img | B=C y - x [CI] | p (Holm) | B=A y - x [CI] | p (Holm) |
+|---|---|---|---|---|---|---|---|---|---|
+| qwen3vl-8b-thinking | Seen | Adversarial | CF | CF near | 336 | +6.0 [+3.0, +8.9] | 8.8e-05 (0.00141) | -2.7 [-6.3, +0.9] | 0.2 (1) |
+| qwen3vl-8b-thinking | Seen | Adversarial | CF | CF far | 336 | +0.3 [-1.2, +1.8] | 1 (1) | +0.6 [-2.7, +3.9] | 0.864 (1) |
+| qwen3vl-8b-thinking | Seen | Adversarial | CF near | CF far | 336 | -5.7 [-8.9, -2.7] | 5.5e-04 (0.00819) | +3.3 [-0.3, +7.1] | 0.135 (1) |
+| qwen3vl-8b-thinking | Seen | AAAAB | CF | CF near | 168 | +6.5 [+2.4, +11.3] | 0.00739 (0.0886) | -4.8 [-10.1, +0.6] | 0.134 (1) |
+| qwen3vl-8b-thinking | Seen | AAAAB | CF | CF far | 168 | +0.6 [-1.2, +3.0] | 1 (1) | +1.2 [-3.6, +6.5] | 0.824 (1) |
+| qwen3vl-8b-thinking | Seen | AAAAB | CF near | CF far | 168 | -6.0 [-10.7, -1.8] | 0.0213 (0.213) | +6.0 [+0.0, +12.5] | 0.0755 (1) |
+| qwen3vl-8b-thinking | Seen | BAAAA | CF | CF near | 168 | +5.4 [+1.8, +9.5] | 0.0117 (0.129) | -0.6 [-5.4, +4.2] | 1 (1) |
+| qwen3vl-8b-thinking | Seen | BAAAA | CF | CF far | 168 | +0.0 [-2.4, +2.4] | 1 (1) | +0.0 [-4.2, +4.2] | 1 (1) |
+| qwen3vl-8b-thinking | Seen | BAAAA | CF near | CF far | 168 | -5.4 [-9.5, -1.2] | 0.0225 (0.213) | +0.6 [-4.8, +5.4] | 1 (1) |
+| qwen3vl-8b-thinking | Unseen | Adversarial | CF | CF near | 668 | +2.4 [+0.9, +4.0] | 0.00522 (0.0679) | +0.3 [-2.1, +2.8] | 0.906 (1) |
+| qwen3vl-8b-thinking | Unseen | Adversarial | CF | CF far | 668 | -0.9 [-1.9, +0.0] | 0.146 (0.876) | +0.3 [-1.8, +2.4] | 0.89 (1) |
+| qwen3vl-8b-thinking | Unseen | Adversarial | CF near | CF far | 668 | -3.3 [-4.8, -1.9] | 3.0e-06 (5.4e-05) | +0.0 [-2.2, +2.2] | 1 (1) |
+| qwen3vl-8b-thinking | Unseen | AAAAB | CF | CF near | 334 | +4.5 [+2.1, +6.9] | 7.3e-04 (0.0102) | +1.2 [-2.1, +4.8] | 0.618 (1) |
+| qwen3vl-8b-thinking | Unseen | AAAAB | CF | CF far | 334 | -0.3 [-1.5, +0.9] | 1 (1) | +0.9 [-2.1, +3.9] | 0.701 (1) |
+| qwen3vl-8b-thinking | Unseen | AAAAB | CF near | CF far | 334 | -4.8 [-7.2, -2.7] | 3.1e-05 (5.2e-04) | -0.3 [-3.9, +3.3] | 1 (1) |
+| qwen3vl-8b-thinking | Unseen | BAAAA | CF | CF near | 334 | +0.3 [-1.8, +2.4] | 1 (1) | -0.6 [-4.2, +3.0] | 0.868 (1) |
+| qwen3vl-8b-thinking | Unseen | BAAAA | CF | CF far | 334 | -1.5 [-3.3, +0.0] | 0.125 (0.875) | -0.3 [-3.3, +2.7] | 1 (1) |
+| qwen3vl-8b-thinking | Unseen | BAAAA | CF near | CF far | 334 | -1.8 [-3.6, -0.3] | 0.0703 (0.562) | +0.3 [-2.4, +3.0] | 1 (1) |
 
 ## Figure 4 data: dose-response (tolerant, %)
 
