@@ -27,8 +27,9 @@ prefix also change the question: B is asked after a list of given labels instead
 five-object answer. The dose series compares against $n=0$, which keeps that format and differs only
 in the labels, but $n=0$ still differs from Default by its \texttt{obj5:} cue. The dose series also
 gives the labels in box order (objects $1,\dots,n$, or $2,\dots,n+1$ in BAAAA), so the number of
-labels and which boxes are labelled change together. Because MiMo-RL rewrites all five labels in its
-answer, the dose changes the labels in the prompt, not how many labels come before B in the answer;
+labels and which boxes are labelled change together. Because MiMo-RL and Qwen-Thinking rewrite all
+five labels in their answers, the dose changes the labels in the prompt, not how many labels come
+before B in the answer;
 for Qwen-Instruct, which continues from the given labels, it changes both. Under CF the wrong class and the new question
 come together, so CF alone does not show whether the drift to A comes from the model's own earlier
 labels or from the question.

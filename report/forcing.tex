@@ -1,4 +1,4 @@
-% Forcing-probe section (RQ2), Xingjian Liu. DRAFT, 2026-11-12: MiMo-RL and Qwen-Instruct complete; MiMo-SFT without its RQ1 baseline; Qwen-Thinking core probes only (no RQ1 baseline yet; finer runs running).
+% Forcing-probe section (RQ2), Xingjian Liu. DRAFT, 2026-11-12: MiMo-RL and Qwen-Instruct complete; MiMo-SFT without its RQ1 baseline; Qwen-Thinking core probes and Unseen dose only (no RQ1 baseline yet; Seen dose and the other finer runs running; its dose Holm is over the Unseen tests until the Seen run is in).
 % Numbers marked \tbd wait for the other three models; MiMo-RL numbers are Unseen unless stated and
 % come from results/mimo-rl-2508/ (data branch rq2/forcing-results) via analysis/forcing_table.py.
 % Needs \usepackage{xcolor,booktabs,graphicx} and the proposal's references.bib.
@@ -77,7 +77,9 @@ $p=0.001$).
 The pull is stronger in MiMo-SFT. Its dose slope on AAAAB is 5.0 points per label (Unseen; 5.1 on
 Seen), about twice MiMo-RL's, and B=A reaches 51.5\% with all four labels. Whether RL training weakens
 the pull or only moves the baseline needs MiMo-SFT's Default run (\tbd). Qwen-Instruct is pulled as
-well: its dose slope on AAAAB is 2.7 points per label. Qwen-Thinking: \tbd.
+well: its dose slope on AAAAB is 2.7 points per label. So is Qwen-Thinking: 3.0 points per label
+(95\% CI 2.0--4.0, Holm $p<0.001$), and all four labels raise its B=A from 29.9\% to 41.6\%
+($+11.7$; $+10.7$ on images where neither call was cut).
 
 \paragraph{When B is box 1, the same labels barely matter.} In BAAAA the one-shot prompt also lists
 the four A labels before asking B, yet B=A rises only 2.7 points (not significant) and the dose slope
@@ -92,8 +94,12 @@ MiMo-SFT answers the same way (all 34 rewrite the list), and so does Qwen-Thinki
 five labels in every answered row and never continues from the given ones. Qwen-Instruct does not. In 27 of 34 checked
 answers it continues from the given labels and writes B right after them. It is also pulled in
 BAAAA: one-shot teacher forcing raises B=A from 25.1\% to 32.6\% ($+7.5$, Holm $p<0.001$), and its
-dose slope there is 1.6 points per label ($p<0.001$). What matters is what the model has just written
-before B, not where B sits in the prompt.
+dose slope there is 1.6 points per label ($p<0.001$). For these three models, what matters is what
+the model has just written before B, not where B sits in the prompt. Qwen-Thinking does not fit this
+rule. It rewrites the list like the MiMo models, so B is the first label of its BAAAA answer, yet its
+dose slope there is 1.5 points per label (95\% CI 0.7--2.3, Holm $p<0.001$), half its slope on AAAAB
+and close to Qwen-Instruct's, and all four labels raise B=A by 5.7 points (CI 2.4--9.3; $+5.5$ on
+images where neither call was cut). Section~\ref{sec:discussion} returns to this.
 
 \paragraph{The model rejects a wrong class but still drifts to A.} Under CF, MiMo-RL almost never
 copies C: B is labelled C in 0.3--1.2\% of items, and C survives on any of the four given boxes in

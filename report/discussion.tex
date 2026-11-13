@@ -1,5 +1,6 @@
 % Discussion, Xingjian Liu. DRAFT, 2026-11-12: written from the forcing probes of MiMo-SFT, MiMo-RL and
-% Qwen-Instruct and the RQ1 runs of MiMo-RL and Qwen-Instruct. \tbd marks what waits on Qwen-Thinking,
+% Qwen-Instruct, the core probes and Unseen dose of Qwen-Thinking (keyword count of its reasoning:
+% analysis/think_cite.py), and the RQ1 runs of MiMo-RL and Qwen-Instruct. \tbd marks what waits on Qwen-Thinking,
 % MiMo-SFT's RQ1 run and the teammates' sections (RQ1 accuracy, budget sweep, error taxonomy).
 % Numbers are Unseen Adversarial unless stated; they come from results/<model>/forcing_tables.md and
 % results/<model>/box_swap.md on the data branch rq2/forcing-results.
@@ -9,9 +10,9 @@
 \section{Discussion}
 \label{sec:discussion}
 
-\paragraph{The labels that pull B are the ones the model writes just before it.} Across the three
-models we can compare so far, B is drawn toward A by the labels that come before it in the model's own
-output, not by where B sits in the prompt. Qwen-Instruct answers without reasoning, one label after
+\paragraph{The labels that pull B are mostly the ones the model writes just before it.} In three of
+the four models, B is drawn toward A by the labels that come before it in the model's own output,
+not by where B sits in the prompt. Qwen-Instruct answers without reasoning, one label after
 another. Asking all five objects at once raises its B=A over Single-object by 15.9 points when B is
 the last box (AAAAB, Holm $p<10^{-11}$), but only by 2.4 points, not significant, when B is the first
 (BAAAA). Given labels pull it in both orders (Section~\ref{sec:forcing}) because it continues from
@@ -19,6 +20,16 @@ them, so in both orders A labels end up directly before B. The MiMo models inste
 labels in box order, and given labels pull them only in AAAAB, where that rewrite puts four A labels
 before B. Inertia in this task is therefore tied to the order of generation, which fits the lower
 B=A of Single-object querying, where each box is answered with nothing written before it.
+Qwen-Thinking is the exception. Like the MiMo models it rewrites all five labels in box order, so in
+BAAAA B is the first label of its answer, yet four given labels still raise its B=A there by 5.7
+points (1.5 points per label, Holm $p<0.001$): half its pull on AAAAB, and about as much as
+Qwen-Instruct's. With no label before B in its answer, the pull has to come through the prompt or the
+reasoning. The reasoning shows one route. Qwen-Thinking often goes back to the given labels as ``the
+example in the problem statement'' and decides that all five boxes share one class. By a keyword
+count it refers to them in 81\% of the 21 BAAAA images where the labels turn B into A, against 52\%
+of those where B stays correct (images where neither call was cut). Answer order is therefore not the
+whole story: a reasoning model can carry the given labels into its decision on B even when B comes
+first.
 
 \paragraph{In a reasoning model, the earlier labels include the reasoning.} MiMo-RL breaks the
 order rule in one place. Under Default its B=A also rises in BAAAA (by 8.7 points over Single-object,
@@ -34,8 +45,9 @@ points at the reasoning. On AAAAB, true labels written at the start of MiMo-RL's
 reasoning, leave B=A at the Default level ($+3.3$ points, not significant), while the same labels
 placed before the reasoning raise it by 13.2. For a reasoning model, then, the place to look for
 self-induced inertia is the reasoning itself. Whether the reasoning names B correctly before the
-answer turns to A is the think--answer analysis of Section~\tbd. Qwen-Thinking will show whether the
-same holds in the other family (\tbd).
+answer turns to A is the think--answer analysis of Section~\tbd. Qwen-Thinking's pull in BAAAA
+points the same way; its placement run will show whether labels written after its reasoning are
+also harmless (\tbd).
 
 \paragraph{RL adds a re-check, but the pull remains.} MiMo-SFT and MiMo-RL share their base model,
 so their differences come from RL training. Two things differ clearly. First, only MiMo-RL
