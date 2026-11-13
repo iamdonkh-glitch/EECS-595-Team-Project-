@@ -1,4 +1,4 @@
-% Forcing-probe section (RQ2), Xingjian Liu. DRAFT, 2026-11-12: MiMo-RL and Qwen-Instruct complete; MiMo-SFT without its RQ1 baseline; Qwen-Thinking core probes, dose (both splits) and Unseen placement (no RQ1 baseline yet, so placement is compared with the user turn and with n=0 by analysis/place_tests.py; Seen placement, Homogeneous and C near / far still running).
+% Forcing-probe section (RQ2), Xingjian Liu. DRAFT, 2026-11-12: MiMo-RL and Qwen-Instruct complete; MiMo-SFT without its RQ1 baseline; Qwen-Thinking core probes, dose and placement (both splits) and the 50-output hand check (no RQ1 baseline yet, so placement is compared with the user turn and with n=0 by analysis/place_tests.py; C near / far still running; Homogeneous needs its Default run).
 % Numbers marked \tbd wait for the other three models; MiMo-RL numbers are Unseen unless stated and
 % come from results/mimo-rl-2508/ (data branch rq2/forcing-results) via analysis/forcing_table.py.
 % Needs \usepackage{xcolor,booktabs,graphicx} and the proposal's references.bib.
@@ -91,7 +91,8 @@ A hand check of 50 raw outputs agrees. All 34 with labels in the user turn rewri
 with fewer than four labels given the model labels the other boxes itself, in 6 of the 26 with true
 labels it changes at least one of them, and under CF it always replaces C with its own classes.
 MiMo-SFT answers the same way (all 34 rewrite the list), and so does Qwen-Thinking: it writes all
-five labels in every answered row and never continues from the given ones. Qwen-Instruct does not. In 27 of 34 checked
+five labels in every answered row and never continues from the given ones (all 34 checked answers
+rewrite the list; it changes a true label in 3 of 26). Qwen-Instruct does not. In 27 of 34 checked
 answers it continues from the given labels and writes B right after them. It is also pulled in
 BAAAA: one-shot teacher forcing raises B=A from 25.1\% to 32.6\% ($+7.5$, Holm $p<0.001$), and its
 dose slope there is 1.6 points per label ($p<0.001$). For these three models, what matters is what
@@ -142,11 +143,13 @@ label after the forced line and stops. After four forced C labels, B is C in 79.
 items for MiMo-SFT and 83.5\% and 83.2\% for Qwen-Instruct (AAAAB and BAAAA). Qwen-Instruct has no
 reasoning that could override the labels, so for it true labels in its own answer pull hardest: B=A
 rises by 11.7 and 19.8 points over Default. Qwen-Thinking reasons but does not re-check either: it
-keeps writing after the label in at most 0.3\% of items, and after four forced C labels B is C in
-64.4\% (AAAAB) and 53.0\% (BAAAA) of items. Unlike MiMo-RL, it follows true labels in its own answer
-as much as in the user turn: on AAAAB, B=A is 44.9\% against 41.6\% (not significant) and 15.0
-points above the one-shot prompt with no labels (Holm $p<10^{-8}$; Qwen-Thinking has no Default run
-yet). On BAAAA the labels in its answer add 3.6 points over no labels, which is not significant.
+keeps writing after the label in at most 0.3\% of items (none of 16 checked by hand), and after four
+forced C labels B is C in 64.4\% (AAAAB) and 53.0\% (BAAAA) of items (Seen: 58.9\% and 44.6\%).
+Unlike MiMo-RL, it follows true labels in its own answer as much as in the user turn: on AAAAB, B=A
+is 44.9\% against 41.6\% (not significant) and 15.0 points above the one-shot prompt with no labels
+(Holm $p<10^{-8}$; Qwen-Thinking has no Default run yet). Seen items agree: 30.4\% against 32.7\%,
+and 9.5 points above no labels (Holm $p=0.002$). On BAAAA the labels in its answer add 3.6 points
+over no labels (Seen: 4.8), which is not significant.
 
 \begin{figure}[t]
 \centering

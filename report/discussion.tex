@@ -1,5 +1,5 @@
 % Discussion, Xingjian Liu. DRAFT, 2026-11-12: written from the forcing probes of MiMo-SFT, MiMo-RL and
-% Qwen-Instruct, the core probes, dose and Unseen placement of Qwen-Thinking (keyword count of its reasoning:
+% Qwen-Instruct, the core probes, dose and placement of Qwen-Thinking (keyword count of its reasoning:
 % analysis/think_cite.py; placement tests: analysis/place_tests.py), and the RQ1 runs of MiMo-RL and Qwen-Instruct. \tbd marks what waits on Qwen-Thinking,
 % MiMo-SFT's RQ1 run and the teammates' sections (RQ1 accuracy, budget sweep, error taxonomy).
 % Numbers are Unseen Adversarial unless stated; they come from results/<model>/forcing_tables.md and
@@ -49,8 +49,8 @@ answer turns to A is the think--answer analysis of Section~\tbd. Qwen-Thinking a
 Its pull in BAAAA, where B is the first label of its answer, cannot come from labels earlier in
 the answer (previous paragraph). Unlike MiMo-RL, it also follows its own answer line: true labels written at
 the start of its answer raise its B=A on AAAAB as much as labels in the user turn (44.9\% against
-41.6\%, 15.0 points above the one-shot prompt with no labels), and it never re-checks the forced
-line. A reasoning model can thus carry this inertia in its reasoning, in its answer, or in both.
+41.6\%, 15.0 points above the one-shot prompt with no labels; Seen items agree), and it never
+re-checks the forced line. A reasoning model can thus carry this inertia in its reasoning, in its answer, or in both.
 
 \paragraph{RL adds a re-check, but the pull remains.} MiMo-SFT and MiMo-RL share their base model,
 so their differences come from RL training. Two things differ clearly. First, only MiMo-RL

@@ -20,7 +20,10 @@ differences in accuracy should be read with this in mind. MiMo-SFT is cut in 1.3
 teacher-forcing calls (at most 4.5\% in any forcing probe; its Default rate is \tbd), and
 Qwen-Instruct, which does not reason, almost never (5 of 3,340 incremental calls). Qwen-Thinking is
 cut in 6.3\% of one-shot, 8.1\% of CF and 9.1\% of incremental calls on Unseen items, all
-inside its reasoning (its Default rate is \tbd).
+inside its reasoning (its Default rate is \tbd). Its placement calls are cut more often (9.9--12.9\%
+on Unseen, 6.0--10.1\% on Seen), each time before its reasoning closed, so no forced label was
+written; its placement comparisons keep their size on the uncut images (e.g.\ $+15.1$ instead of
+$+15.0$ points of B=A over no labels on AAAAB).
 
 \paragraph{The probes change more than the labels.} One-shot teacher forcing and the counterfactual
 prefix also change the question: B is asked after a list of given labels instead of inside one
