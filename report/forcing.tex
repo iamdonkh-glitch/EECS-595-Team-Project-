@@ -1,4 +1,4 @@
-% Forcing-probe section (RQ2), Xingjian Liu. DRAFT, 2026-11-12: MiMo-RL and Qwen-Instruct complete; MiMo-SFT without its RQ1 baseline; Qwen-Thinking core probes, dose and placement (both splits) and the 50-output hand check (no RQ1 baseline yet, so placement is compared with the user turn and with n=0 by analysis/place_tests.py; C near / far still running; Homogeneous needs its Default run).
+% Forcing-probe section (RQ2), Xingjian Liu. DRAFT, 2026-11-12: MiMo-RL and Qwen-Instruct complete; MiMo-SFT without its RQ1 baseline; Qwen-Thinking all forcing runs and the 50-output hand check (no RQ1 baseline yet, so placement is compared with the user turn and with n=0 by analysis/place_tests.py; Homogeneous needs its Default run).
 % Numbers marked \tbd wait for the other three models; MiMo-RL numbers are Unseen unless stated and
 % come from results/mimo-rl-2508/ (data branch rq2/forcing-results) via analysis/forcing_table.py.
 % Needs \usepackage{xcolor,booktabs,graphicx} and the proposal's references.bib.
@@ -118,8 +118,11 @@ similarity to A changes how often C is accepted. With the remaining class most s
 C survives on a given box in 8.1\% (Unseen) and 21.8\% (Seen) of answers, and B is labelled C 1.8
 and 3.9 points more often than with a random C (both orders; Holm $p=0.03$ and $0.07$). With the
 least similar class, both stay at the level of a random C. B=A does not differ significantly between
-near, random and far C. The drift of B toward A thus does not depend on how plausible the injected
-class is.
+near, random and far C. MiMo-SFT and Qwen-Thinking show the same pattern. Pooled over both orders,
+near C is copied onto B more often than far C: by 3.9 and 3.3 points on Unseen (Holm $p<0.001$ for
+both) and by 4.5 and 5.7 on Seen (Holm $p=0.02$ and $0.008$). Their B=A does not change either.
+Qwen-Instruct, which copies C far more often, does not accept a near C more than a random one. The
+drift of B toward A thus does not depend on how plausible the injected class is.
 
 \paragraph{Following labels helps when they are right.} On Homogeneous items, the same one-shot probe
 raises accuracy on box 5 from 80.4\% to 86.9\% ($+6.5$, Holm $p<10^{-3}$; Seen: 87.0\% to 96.0\%),
