@@ -4,7 +4,7 @@ Xingjian Liu's RQ2 forcing runs of Qwen3-VL-8B-Thinking on Adversarial ROPE (`AA
 
 **What this folder has.** Every forcing run of this model: the core probes (TF one-shot, TF incremental, CF), the dose series, placement, the Homogeneous control and C near / far, plus the 50-output hand check.
 
-**The RQ1 baseline of this model is not in yet** (Zhongqi's run). Until its `rq1_qwen3vl-8b-thinking_*` files are in this folder, the tables here give:
+**The RQ1 baseline of this model is not in yet.** Until its `rq1_qwen3vl-8b-thinking_*` files are in this folder, the tables here give:
 - the rates under each probe;
 - the dose tests (each n against n = 0);
 - placement, tested by `forcing_place_tests.md` against the same labels in the user turn and against n = 0;
@@ -91,7 +91,7 @@ The tables come from `analysis/forcing_table.py` on branch `rq2/forcing-probes` 
 ```bash
 python analysis/forcing_table.py --out-dir results/qwen3vl-8b-thinking \
   results/qwen3vl-8b-thinking/forcing_*qwen3vl-8b-thinking_*.jsonl > results/qwen3vl-8b-thinking/forcing_tables.md
-# once Zhongqi's RQ1 files are here, add: results/qwen3vl-8b-thinking/rq1_qwen3vl-8b-thinking_*.jsonl
+# once this model's RQ1 files are here, add: results/qwen3vl-8b-thinking/rq1_qwen3vl-8b-thinking_*.jsonl
 python analysis/place_tests.py qwen3vl-8b-thinking results/qwen3vl-8b-thinking/forcing_*qwen3vl-8b-thinking_*.jsonl \
   > results/qwen3vl-8b-thinking/forcing_place_tests.md
 ```

@@ -2,7 +2,7 @@
 
 Xingjian Liu's RQ2 forcing runs of MiMo-VL-7B-SFT-2508 on Adversarial ROPE (`AAAAB`, `BAAAA`; Seen = `train`, Unseen = `validation`) and the Homogeneous control. The probes, scoring and statistics are the same as for MiMo-VL-7B-RL-2508; `results/mimo-rl-2508/README.md` (section "RQ2 forcing probes" and after) describes them in full.
 
-**The RQ1 baseline of this model is not in yet** (Yuzhang's run). Until its `rq1_mimo-sft-2508_*` files are in this folder, the tables here give the rates under each probe, the dose tests (each n against n = 0), placement, the given-box table and C near / far against random C. They do not give any comparison with `default` or `single`. Once the RQ1 files arrive, the same command rebuilds every table with those comparisons.
+**The RQ1 baseline of this model is not in yet.** Until its `rq1_mimo-sft-2508_*` files are in this folder, the tables here give the rates under each probe, the dose tests (each n against n = 0), placement, the given-box table and C near / far against random C. They do not give any comparison with `default` or `single`. Once the RQ1 files arrive, the same command rebuilds every table with those comparisons.
 
 ## Files
 
@@ -52,7 +52,7 @@ The tables come from `analysis/forcing_table.py` on branch `rq2/forcing-probes` 
 ```bash
 python analysis/forcing_table.py --out-dir results/mimo-sft-2508 \
   results/mimo-sft-2508/forcing_*mimo-sft-2508_*.jsonl > results/mimo-sft-2508/forcing_tables.md
-# once Yuzhang's RQ1 files are here, add: results/mimo-sft-2508/rq1_mimo-sft-2508_*.jsonl
+# once this model's RQ1 files are here, add: results/mimo-sft-2508/rq1_mimo-sft-2508_*.jsonl
 ```
 
 Unlike MiMo-VL-7B-RL, the SFT model answers in the plain `obj1: …, obj5: …` format, so strict and tolerant agree here (for example 51.5% and 51.5% B=A under TF one-shot on Unseen `AAAAB`).
