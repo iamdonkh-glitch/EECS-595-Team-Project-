@@ -1,0 +1,161 @@
+model,subset,probe,split,parser,n_images,n_objects,correct,truncated,unparsed,b_eq_a,borrowed,off_list,in_image,invented
+mimo-sft-2508,In-the-Wild,default,Seen,tolerant,1539,7695,4696,450,1,0,1101,18,730,699
+mimo-sft-2508,In-the-Wild,default,Seen,strict,1539,7695,4695,450,1,0,1102,18,730,699
+mimo-sft-2508,In-the-Wild,default,Unseen,tolerant,1172,5860,3235,475,0,0,1037,9,609,495
+mimo-sft-2508,In-the-Wild,default,Unseen,strict,1172,5860,3233,475,0,0,1039,9,609,495
+mimo-sft-2508,In-the-Wild,single,Seen,tolerant,1539,7695,5253,90,0,0,858,32,710,752
+mimo-sft-2508,In-the-Wild,single,Seen,strict,1539,7695,5248,90,0,0,857,42,708,750
+mimo-sft-2508,In-the-Wild,single,Unseen,tolerant,1172,5860,3677,68,0,0,866,21,665,563
+mimo-sft-2508,In-the-Wild,single,Unseen,strict,1172,5860,3676,68,0,0,865,25,664,562
+mimo-sft-2508,Homogeneous,default,Seen,tolerant,400,2000,1705,25,0,0,0,5,127,138
+mimo-sft-2508,Homogeneous,default,Seen,strict,400,2000,1705,25,0,0,0,5,127,138
+mimo-sft-2508,Homogeneous,default,Unseen,tolerant,490,2450,1983,60,0,0,0,3,293,111
+mimo-sft-2508,Homogeneous,default,Unseen,strict,490,2450,1983,60,0,0,0,3,293,111
+mimo-sft-2508,Homogeneous,single,Seen,tolerant,400,2000,1702,10,0,0,0,8,149,131
+mimo-sft-2508,Homogeneous,single,Seen,strict,400,2000,1702,10,0,0,0,8,149,131
+mimo-sft-2508,Homogeneous,single,Unseen,tolerant,490,2450,1858,10,0,0,0,4,409,169
+mimo-sft-2508,Homogeneous,single,Unseen,strict,490,2450,1858,10,0,0,0,7,409,166
+mimo-sft-2508,Heterogeneous,default,Seen,tolerant,312,1560,771,215,0,0,268,4,132,170
+mimo-sft-2508,Heterogeneous,default,Seen,strict,312,1560,771,215,0,0,268,5,132,169
+mimo-sft-2508,Heterogeneous,default,Unseen,tolerant,246,1230,518,150,0,0,269,3,150,140
+mimo-sft-2508,Heterogeneous,default,Unseen,strict,246,1230,518,150,0,0,269,3,150,140
+mimo-sft-2508,Heterogeneous,single,Seen,tolerant,312,1560,924,33,0,0,276,9,145,173
+mimo-sft-2508,Heterogeneous,single,Seen,strict,312,1560,923,33,0,0,276,11,145,172
+mimo-sft-2508,Heterogeneous,single,Unseen,tolerant,246,1230,610,21,0,0,286,7,153,153
+mimo-sft-2508,Heterogeneous,single,Unseen,strict,246,1230,610,21,0,0,285,8,153,153
+mimo-sft-2508,Adversarial AAAAB,default,Seen,tolerant,168,840,609,15,0,44,44,2,86,40
+mimo-sft-2508,Adversarial AAAAB,default,Seen,strict,168,840,608,15,0,45,44,2,86,40
+mimo-sft-2508,Adversarial AAAAB,default,Unseen,tolerant,334,1670,1081,65,0,114,92,0,218,100
+mimo-sft-2508,Adversarial AAAAB,default,Unseen,strict,334,1670,1081,65,0,114,92,0,218,100
+mimo-sft-2508,Adversarial AAAAB,single,Seen,tolerant,168,840,625,8,0,20,41,4,95,47
+mimo-sft-2508,Adversarial AAAAB,single,Seen,strict,168,840,625,8,0,20,41,4,95,47
+mimo-sft-2508,Adversarial AAAAB,single,Unseen,tolerant,334,1670,1083,19,0,53,118,6,250,141
+mimo-sft-2508,Adversarial AAAAB,single,Unseen,strict,334,1670,1083,19,0,53,118,9,250,138
+mimo-sft-2508,Adversarial BAAAA,default,Seen,tolerant,168,840,580,25,0,36,48,3,75,73
+mimo-sft-2508,Adversarial BAAAA,default,Seen,strict,168,840,580,25,0,36,48,3,75,73
+mimo-sft-2508,Adversarial BAAAA,default,Unseen,tolerant,334,1670,1069,50,0,114,104,2,214,117
+mimo-sft-2508,Adversarial BAAAA,default,Unseen,strict,334,1670,1069,50,0,114,104,2,214,117
+mimo-sft-2508,Adversarial BAAAA,single,Seen,tolerant,168,840,615,5,0,20,46,4,92,58
+mimo-sft-2508,Adversarial BAAAA,single,Seen,strict,168,840,615,5,0,20,46,4,92,58
+mimo-sft-2508,Adversarial BAAAA,single,Unseen,tolerant,334,1670,1075,16,0,70,115,2,241,151
+mimo-sft-2508,Adversarial BAAAA,single,Unseen,strict,334,1670,1074,16,0,69,115,5,240,151
+mimo-rl-2508,In-the-Wild,default,Seen,tolerant,1539,7695,4666,975,5,0,877,1,545,626
+mimo-rl-2508,In-the-Wild,default,Seen,strict,1539,7695,4285,975,450,0,835,95,505,550
+mimo-rl-2508,In-the-Wild,default,Unseen,tolerant,1172,5860,3126,1055,2,0,827,3,452,395
+mimo-rl-2508,In-the-Wild,default,Unseen,strict,1172,5860,2716,1055,595,0,718,96,372,308
+mimo-rl-2508,In-the-Wild,single,Seen,tolerant,1539,7695,5369,79,0,0,877,2,617,751
+mimo-rl-2508,In-the-Wild,single,Seen,strict,1539,7695,4067,79,0,0,580,2201,365,403
+mimo-rl-2508,In-the-Wild,single,Unseen,tolerant,1172,5860,3805,80,0,0,869,1,599,506
+mimo-rl-2508,In-the-Wild,single,Unseen,strict,1172,5860,2755,80,0,0,499,1951,345,230
+mimo-rl-2508,Homogeneous,default,Seen,tolerant,400,2000,1740,35,1,0,0,0,121,103
+mimo-rl-2508,Homogeneous,default,Seen,strict,400,2000,1703,35,46,0,0,7,114,95
+mimo-rl-2508,Homogeneous,default,Unseen,tolerant,490,2450,1954,110,13,0,0,0,285,88
+mimo-rl-2508,Homogeneous,default,Unseen,strict,490,2450,1911,110,50,0,0,20,280,79
+mimo-rl-2508,Homogeneous,single,Seen,tolerant,400,2000,1764,5,0,0,0,0,123,108
+mimo-rl-2508,Homogeneous,single,Seen,strict,400,2000,1474,5,0,0,0,408,72,41
+mimo-rl-2508,Homogeneous,single,Unseen,tolerant,490,2450,1952,16,0,0,0,0,344,138
+mimo-rl-2508,Homogeneous,single,Unseen,strict,490,2450,1579,16,0,0,0,619,166,70
+mimo-rl-2508,Heterogeneous,default,Seen,tolerant,312,1560,751,340,4,0,211,1,104,149
+mimo-rl-2508,Heterogeneous,default,Seen,strict,312,1560,708,340,70,0,192,16,96,138
+mimo-rl-2508,Heterogeneous,default,Unseen,tolerant,246,1230,510,285,0,0,203,0,126,106
+mimo-rl-2508,Heterogeneous,default,Unseen,strict,246,1230,435,285,135,0,177,9,100,89
+mimo-rl-2508,Heterogeneous,single,Seen,tolerant,312,1560,964,33,0,0,274,0,117,172
+mimo-rl-2508,Heterogeneous,single,Seen,strict,312,1560,651,33,0,0,174,531,76,95
+mimo-rl-2508,Heterogeneous,single,Unseen,tolerant,246,1230,652,23,0,0,271,1,142,141
+mimo-rl-2508,Heterogeneous,single,Unseen,strict,246,1230,404,23,0,0,145,511,73,74
+mimo-rl-2508,Adversarial AAAAB,default,Seen,tolerant,168,840,602,45,0,35,42,0,59,57
+mimo-rl-2508,Adversarial AAAAB,default,Seen,strict,168,840,578,45,30,34,35,4,58,56
+mimo-rl-2508,Adversarial AAAAB,default,Unseen,tolerant,334,1670,1068,175,2,98,57,0,179,91
+mimo-rl-2508,Adversarial AAAAB,default,Unseen,strict,334,1670,985,175,101,88,49,29,167,76
+mimo-rl-2508,Adversarial AAAAB,single,Seen,tolerant,168,840,658,5,0,21,41,0,73,42
+mimo-rl-2508,Adversarial AAAAB,single,Seen,strict,168,840,542,5,0,15,21,192,42,23
+mimo-rl-2508,Adversarial AAAAB,single,Unseen,tolerant,334,1670,1148,20,0,63,97,1,225,116
+mimo-rl-2508,Adversarial AAAAB,single,Unseen,strict,334,1670,872,20,0,31,59,501,129,58
+mimo-rl-2508,Adversarial BAAAA,default,Seen,tolerant,168,840,578,60,0,30,38,0,66,68
+mimo-rl-2508,Adversarial BAAAA,default,Seen,strict,168,840,562,60,25,29,37,4,64,59
+mimo-rl-2508,Adversarial BAAAA,default,Unseen,tolerant,334,1670,1108,110,1,109,82,0,168,92
+mimo-rl-2508,Adversarial BAAAA,default,Unseen,strict,334,1670,1038,110,90,107,66,19,156,84
+mimo-rl-2508,Adversarial BAAAA,single,Seen,tolerant,168,840,644,7,0,27,41,0,73,48
+mimo-rl-2508,Adversarial BAAAA,single,Seen,strict,168,840,532,7,0,20,22,196,41,22
+mimo-rl-2508,Adversarial BAAAA,single,Unseen,tolerant,334,1670,1125,19,0,80,113,1,216,116
+mimo-rl-2508,Adversarial BAAAA,single,Unseen,strict,334,1670,872,19,0,55,57,500,109,58
+qwen3vl-8b-instruct,In-the-Wild,default,Seen,tolerant,1539,7695,5806,0,0,0,827,69,569,424
+qwen3vl-8b-instruct,In-the-Wild,default,Seen,strict,1539,7695,5805,0,0,0,827,70,569,424
+qwen3vl-8b-instruct,In-the-Wild,default,Unseen,tolerant,1172,5860,4062,15,0,0,886,46,543,308
+qwen3vl-8b-instruct,In-the-Wild,default,Unseen,strict,1172,5860,4016,15,69,0,882,47,525,306
+qwen3vl-8b-instruct,In-the-Wild,single,Seen,tolerant,1539,7695,5811,0,0,0,769,24,609,482
+qwen3vl-8b-instruct,In-the-Wild,single,Seen,strict,1539,7695,5811,0,0,0,769,24,609,482
+qwen3vl-8b-instruct,In-the-Wild,single,Unseen,tolerant,1172,5860,4098,0,0,0,838,19,570,335
+qwen3vl-8b-instruct,In-the-Wild,single,Unseen,strict,1172,5860,4098,0,0,0,838,19,570,335
+qwen3vl-8b-instruct,Homogeneous,default,Seen,tolerant,400,2000,1867,0,0,0,0,5,91,37
+qwen3vl-8b-instruct,Homogeneous,default,Seen,strict,400,2000,1867,0,0,0,0,5,91,37
+qwen3vl-8b-instruct,Homogeneous,default,Unseen,tolerant,490,2450,2087,0,0,0,0,6,315,42
+qwen3vl-8b-instruct,Homogeneous,default,Unseen,strict,490,2450,2087,0,0,0,0,6,315,42
+qwen3vl-8b-instruct,Homogeneous,single,Seen,tolerant,400,2000,1814,0,0,0,0,0,131,55
+qwen3vl-8b-instruct,Homogeneous,single,Seen,strict,400,2000,1814,0,0,0,0,0,131,55
+qwen3vl-8b-instruct,Homogeneous,single,Unseen,tolerant,490,2450,2047,0,0,0,0,1,342,60
+qwen3vl-8b-instruct,Homogeneous,single,Unseen,strict,490,2450,2047,0,0,0,0,1,342,60
+qwen3vl-8b-instruct,Heterogeneous,default,Seen,tolerant,312,1560,1081,0,0,0,219,26,107,127
+qwen3vl-8b-instruct,Heterogeneous,default,Seen,strict,312,1560,1073,0,7,0,219,28,107,126
+qwen3vl-8b-instruct,Heterogeneous,default,Unseen,tolerant,246,1230,734,5,0,0,249,13,112,117
+qwen3vl-8b-instruct,Heterogeneous,default,Unseen,strict,246,1230,727,5,10,0,249,13,110,116
+qwen3vl-8b-instruct,Heterogeneous,single,Seen,tolerant,312,1560,1078,0,0,0,212,9,123,138
+qwen3vl-8b-instruct,Heterogeneous,single,Seen,strict,312,1560,1078,0,0,0,212,9,123,138
+qwen3vl-8b-instruct,Heterogeneous,single,Unseen,tolerant,246,1230,750,0,0,0,257,3,118,102
+qwen3vl-8b-instruct,Heterogeneous,single,Unseen,strict,246,1230,750,0,0,0,257,3,118,102
+qwen3vl-8b-instruct,Adversarial AAAAB,default,Seen,tolerant,168,840,678,0,0,45,41,1,48,27
+qwen3vl-8b-instruct,Adversarial AAAAB,default,Seen,strict,168,840,678,0,0,45,41,1,48,27
+qwen3vl-8b-instruct,Adversarial AAAAB,default,Unseen,tolerant,334,1670,1219,0,0,120,89,11,185,46
+qwen3vl-8b-instruct,Adversarial AAAAB,default,Unseen,strict,334,1670,1219,0,0,120,89,11,185,46
+qwen3vl-8b-instruct,Adversarial AAAAB,single,Seen,tolerant,168,840,660,0,0,25,43,0,75,37
+qwen3vl-8b-instruct,Adversarial AAAAB,single,Seen,strict,168,840,660,0,0,25,43,0,75,37
+qwen3vl-8b-instruct,Adversarial AAAAB,single,Unseen,tolerant,334,1670,1234,0,0,67,87,5,208,69
+qwen3vl-8b-instruct,Adversarial AAAAB,single,Unseen,strict,334,1670,1234,0,0,67,87,5,208,69
+qwen3vl-8b-instruct,Adversarial BAAAA,default,Seen,tolerant,168,840,669,0,0,31,50,5,59,26
+qwen3vl-8b-instruct,Adversarial BAAAA,default,Seen,strict,168,840,665,0,4,31,50,6,59,25
+qwen3vl-8b-instruct,Adversarial BAAAA,default,Unseen,tolerant,334,1670,1225,0,0,84,102,7,193,59
+qwen3vl-8b-instruct,Adversarial BAAAA,default,Unseen,strict,334,1670,1216,0,9,84,102,8,192,59
+qwen3vl-8b-instruct,Adversarial BAAAA,single,Seen,tolerant,168,840,656,0,0,31,42,0,70,41
+qwen3vl-8b-instruct,Adversarial BAAAA,single,Seen,strict,168,840,656,0,0,31,42,0,70,41
+qwen3vl-8b-instruct,Adversarial BAAAA,single,Unseen,tolerant,334,1670,1218,0,0,76,97,3,208,68
+qwen3vl-8b-instruct,Adversarial BAAAA,single,Unseen,strict,334,1670,1218,0,0,76,97,3,208,68
+qwen3vl-8b-thinking,In-the-Wild,default,Seen,tolerant,1539,7695,4819,1030,0,0,846,4,565,431
+qwen3vl-8b-thinking,In-the-Wild,default,Seen,strict,1539,7695,4819,1030,0,0,846,4,565,431
+qwen3vl-8b-thinking,In-the-Wild,default,Unseen,tolerant,1172,5860,3123,1045,0,0,836,2,502,352
+qwen3vl-8b-thinking,In-the-Wild,default,Unseen,strict,1172,5860,3122,1045,0,0,837,2,502,352
+qwen3vl-8b-thinking,In-the-Wild,single,Seen,tolerant,1539,7695,5429,105,0,0,892,1,733,535
+qwen3vl-8b-thinking,In-the-Wild,single,Seen,strict,1539,7695,5429,105,0,0,892,1,733,535
+qwen3vl-8b-thinking,In-the-Wild,single,Unseen,tolerant,1172,5860,3816,92,0,0,950,1,629,372
+qwen3vl-8b-thinking,In-the-Wild,single,Unseen,strict,1172,5860,3816,92,0,0,950,1,629,372
+qwen3vl-8b-thinking,Homogeneous,default,Seen,tolerant,400,2000,1798,45,0,0,0,0,103,54
+qwen3vl-8b-thinking,Homogeneous,default,Seen,strict,400,2000,1798,45,0,0,0,0,103,54
+qwen3vl-8b-thinking,Homogeneous,default,Unseen,tolerant,490,2450,1946,150,0,0,0,0,299,55
+qwen3vl-8b-thinking,Homogeneous,default,Unseen,strict,490,2450,1946,150,0,0,0,0,299,55
+qwen3vl-8b-thinking,Homogeneous,single,Seen,tolerant,400,2000,1765,11,0,0,0,0,154,70
+qwen3vl-8b-thinking,Homogeneous,single,Seen,strict,400,2000,1765,11,0,0,0,0,154,70
+qwen3vl-8b-thinking,Homogeneous,single,Unseen,tolerant,490,2450,1971,21,0,0,0,0,385,73
+qwen3vl-8b-thinking,Homogeneous,single,Unseen,strict,490,2450,1971,21,0,0,0,0,385,73
+qwen3vl-8b-thinking,Heterogeneous,default,Seen,tolerant,312,1560,801,375,0,0,168,3,108,105
+qwen3vl-8b-thinking,Heterogeneous,default,Seen,strict,312,1560,801,375,0,0,168,3,108,105
+qwen3vl-8b-thinking,Heterogeneous,default,Unseen,tolerant,246,1230,528,250,0,0,229,4,119,100
+qwen3vl-8b-thinking,Heterogeneous,default,Unseen,strict,246,1230,528,250,0,0,229,4,119,100
+qwen3vl-8b-thinking,Heterogeneous,single,Seen,tolerant,312,1560,1015,49,0,0,239,0,132,125
+qwen3vl-8b-thinking,Heterogeneous,single,Seen,strict,312,1560,1015,49,0,0,239,0,132,125
+qwen3vl-8b-thinking,Heterogeneous,single,Unseen,tolerant,246,1230,660,22,0,0,284,2,137,125
+qwen3vl-8b-thinking,Heterogeneous,single,Unseen,strict,246,1230,660,22,0,0,284,2,137,125
+qwen3vl-8b-thinking,Adversarial AAAAB,default,Seen,tolerant,168,840,605,50,0,43,37,1,57,47
+qwen3vl-8b-thinking,Adversarial AAAAB,default,Seen,strict,168,840,605,50,0,43,37,1,57,47
+qwen3vl-8b-thinking,Adversarial AAAAB,default,Unseen,tolerant,334,1670,1062,190,0,107,77,0,182,52
+qwen3vl-8b-thinking,Adversarial AAAAB,default,Unseen,strict,334,1670,1062,190,0,107,77,0,182,52
+qwen3vl-8b-thinking,Adversarial AAAAB,single,Seen,tolerant,168,840,617,5,0,30,42,1,96,49
+qwen3vl-8b-thinking,Adversarial AAAAB,single,Seen,strict,168,840,617,5,0,30,42,1,96,49
+qwen3vl-8b-thinking,Adversarial AAAAB,single,Unseen,tolerant,334,1670,1153,17,0,89,109,0,235,67
+qwen3vl-8b-thinking,Adversarial AAAAB,single,Unseen,strict,334,1670,1153,17,0,89,109,0,235,67
+qwen3vl-8b-thinking,Adversarial BAAAA,default,Seen,tolerant,168,840,583,65,0,37,43,0,70,42
+qwen3vl-8b-thinking,Adversarial BAAAA,default,Seen,strict,168,840,583,65,0,37,43,0,70,42
+qwen3vl-8b-thinking,Adversarial BAAAA,default,Unseen,tolerant,334,1670,1096,160,0,111,84,0,175,44
+qwen3vl-8b-thinking,Adversarial BAAAA,default,Unseen,strict,334,1670,1096,160,0,111,84,0,175,44
+qwen3vl-8b-thinking,Adversarial BAAAA,single,Seen,tolerant,168,840,621,8,0,33,43,0,89,46
+qwen3vl-8b-thinking,Adversarial BAAAA,single,Seen,strict,168,840,621,8,0,33,43,0,89,46
+qwen3vl-8b-thinking,Adversarial BAAAA,single,Unseen,tolerant,334,1670,1147,21,0,93,110,0,235,64
+qwen3vl-8b-thinking,Adversarial BAAAA,single,Unseen,strict,334,1670,1147,21,0,93,110,0,235,64
